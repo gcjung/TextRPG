@@ -1,2 +1,2 @@
 # TextRPG
-VisualStudio C++을 이용한 프로젝트
+VisualStudio C++을 이용한 게임 프로젝트
