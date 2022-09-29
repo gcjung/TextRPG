@@ -7,12 +7,12 @@ extern Character My_Character;
 //=====================================================
 // Item Class 정의
 //=====================================================
-Item::Item() : name("NONAME"), price(0) {}
-Item::Item(string name, int price) : name(name), price(price){}
+Item::Item() : name("NONAME"), price(0), isWearing(false) {}
+Item::Item(string name, int price) : name(name), price(price), isWearing(false) {}
 Item::~Item()
 {
 	//setcolor(BLACK, WHITE);	// 상점 디버그용 // 테스트
-	gotoxy(48, 59); cout << "~Item 해제";
+	//gotoxy(48, 59); cout << "~Item 해제";
 	//setcolor(WHITE, BLACK);
 }
 
@@ -37,23 +37,23 @@ int Item::GetPrice() const
 
 
 // virtual
-//int Item::GetCount()
-//{
-//	return VIRTUAL_RETURN;
-//}
-//void Item::SetCount(int count)
-//{
-//
-//}
+int Item::GetCount()
+{
+	return 1;
+}
+void Item::SetCount(int count)
+{
 
-//int Item::GetIsUse()
-//{
-//	return 0;		// 물약에 대해선 장착장비가 아니니깐 항상 0, 
-//}
-//void Item::SetIsUse(int isuse)
-//{
-//
-//}
+}
+
+int Item::GetIsUse()
+{
+	return 0;		// 물약에 대해선 장착장비가 아니니깐 항상 0, 
+}
+void Item::SetIsUse(int isuse)
+{
+
+}
 
 //void Item::UseItem()
 //{
@@ -73,38 +73,37 @@ int Item::GetPrice() const
 //=====================================================
 // Equipment Class 정의
 //=====================================================
-Equipment::Equipment() :HP(0), MP(0), Att(0), Def(0), IsUse(0),Count(1) {}
+Equipment::Equipment() :hp(0), mp(0), att(0), count(1){ isWearing = 0; }
 Equipment::Equipment(string Name, int Price, int Att)	// 무기용
-	:Item(Name,Price), Att(Att), IsUse(0), Count(1),HP(0), MP(0), Def(0) {}
-Equipment::Equipment(string Name, int Price, int Hp, int Mp, int Def) // 방어구용
-	:Item(Name, Price), HP(Hp), MP(Mp),Def(Def),IsUse(0), Count(1), Att(0) {}
+	: Item(Name, Price), att(Att), count(1), hp(0), mp(0) {isWearing = 0;}
+
 Equipment::~Equipment()
 {
-	gotoxy(48, 57); cout << "~Equipment 해제";
+	//gotoxy(48, 57); cout << "~Equipment 해제";
 }
 
 //virtual
 int Equipment::GetCount()
 {
-	return this->Count;
+	return this->count;
 }
 void Equipment::SetCount(int count)
 {
-	this->Count = count;
+	this->count = count;
 }
 
 int Equipment::GetIsUse()
 {
-	return IsUse;
+	return isWearing;
 }
 void Equipment::SetIsUse(int isuse)
 {
-	this->IsUse = isuse;
+	this->isWearing = isuse;
 }
 
 void Equipment::UseItem()
 {
-	My_Character.SetAddAtt(this->Att);
+	My_Character.SetAddAtt(this->att);
 }
 void Equipment::ShowInfo()
 {
@@ -112,9 +111,9 @@ void Equipment::ShowInfo()
 	{
 		cout.width(15);
 		cout << this->GetName();
-		if (IsUse) { cout << "(장착)";	cout.width(2); }
+		if (isWearing) { cout << "(장착)";	cout.width(2); }
 		else cout.width(8);
-		cout << this->Count;
+		cout << this->count;
 		cout.width(13);
 		cout << "공격력 +10";
 	}
@@ -122,9 +121,9 @@ void Equipment::ShowInfo()
 	{
 		cout.width(15);
 		cout << this->GetName();
-		if (IsUse) { cout << "(장착)";	cout.width(2); }
+		if (isWearing) { cout << "(장착)";	cout.width(2); }
 		else cout.width(8);
-		cout << this->Count;
+		cout << this->count;
 		cout.width(13);
 		cout << "공격력 +20";
 	}
@@ -132,9 +131,9 @@ void Equipment::ShowInfo()
 	{
 		cout.width(15);
 		cout << this->GetName();
-		if (IsUse) { cout << "(장착)";	cout.width(2); }
+		if (isWearing) { cout << "(장착)";	cout.width(2); }
 		else cout.width(8);
-		cout << this->Count;
+		cout << this->count;
 		cout.width(13);
 		cout << "공격력 +40";
 	}
@@ -142,16 +141,16 @@ void Equipment::ShowInfo()
 	{
 		cout.width(15);
 		cout << this->GetName();
-		if (IsUse) { cout << "(장착)";	cout.width(2); }
+		if (isWearing) { cout << "(장착)";	cout.width(2); }
 		else cout.width(8);
-		cout << this->Count;
+		cout << this->count;
 		cout.width(13);
 		cout << "공격력 +55";
 	}
 }
-int Equipment::IsEquipment()	// [1] - 장비 아이템, [0] - 소비아이템 
+int Equipment::GetItemType()	// [1] - 장비 아이템, [0] - 소비아이템 
 {
-	return 1;
+	return static_cast<int> (ItemType::Equipment);
 }
 
 
@@ -159,55 +158,57 @@ int Equipment::IsEquipment()	// [1] - 장비 아이템, [0] - 소비아이템
 //=====================================================
 // Potion Class 정의
 //=====================================================
-Potion::Potion() :Count(0), HP(0), MP(0) {}
+Potion::Potion() :count(0), hp(0), mp(0) {}
 Potion::Potion(string Name, int Hp, int Mp, int Price, int Count)
-	: Item(Name, Price), Count(Count), HP(Hp), MP(Mp) {}
+	: Item(Name, Price), count(Count), hp(Hp), mp(Mp) {}
 Potion::~Potion()
 {
-	gotoxy(48, 60); cout << "~Potion 해제";
+	//gotoxy(48, 60); cout << "~Potion 해제";
 }
 
-//virtual
+
 int Potion::GetCount()
 {
-	return this->Count;
+	return this->count;
 }
+
 void Potion::SetCount(int count)
 {
-	this->Count = count;
+	this->count = count;
 }
+//virtual
+//int Potion::GetIsUse()
+//{
+//	return 0;
+//}
+//void Potion::SetIsUse(int isuse)
+//{
+//
+//}
 
-int Potion::GetIsUse()
-{
-	return VIRTUAL_RETURN;
-}
-void Potion::SetIsUse(int isuse)
-{
-
-}
 
 void Potion::UseItem()
 {
-	SetCount(GetCount() - 1);	// 1개판매 (개수가 여러개면 1개 줄이기)
+	SetCount(GetCount() - 1);	// 1개줄이기 (개수가 여러개면 1개 줄이기)
 
 	// HP 회복
-	if ((My_Character.GetCurrentHP() + this->HP) > My_Character.GetMaxHP()) // HP회복했을때 MaxMP보다 클때
+	if ((My_Character.GetCurrentHP() + this->hp) > My_Character.GetMaxHP()) // HP회복했을때 MaxMP보다 클때
 	{
 		My_Character.SetCurrentHP(My_Character.GetMaxHP());
 	}
 	else	// HP회복했을때 Max보다 작을때
 	{
-		My_Character.SetCurrentHP(My_Character.GetCurrentHP() + this->HP);
+		My_Character.SetCurrentHP(My_Character.GetCurrentHP() + this->hp);
 	}
 
 	// MP 회복
-	if (My_Character.GetCurrentMP() + this->MP > My_Character.GetMaxMP()) // MP회복했을때 MaxMP보다 클때
+	if (My_Character.GetCurrentMP() + this->mp > My_Character.GetMaxMP()) // MP회복했을때 MaxMP보다 클때
 	{
 		My_Character.SetCurrentMP(My_Character.GetMaxMP());
 	}
 	else	// MP회복했을때 Max보다 작을때
 	{
-		My_Character.SetCurrentMP(My_Character.GetCurrentMP() + this->MP);
+		My_Character.SetCurrentMP(My_Character.GetCurrentMP() + this->mp);
 	}
 
 }
@@ -218,7 +219,7 @@ void Potion::ShowInfo()
 		cout.width(15);
 		cout << this->GetName();
 		cout.width(8);
-		cout << this->Count;
+		cout << this->count;
 		cout.width(13);
 		cout << "HP +30";
 	}
@@ -227,7 +228,7 @@ void Potion::ShowInfo()
 		cout.width(15);
 		cout << this->GetName();
 		cout.width(8);
-		cout << this->Count;
+		cout << this->count;
 		cout.width(13);
 		cout << "MP +30";
 	}
@@ -236,7 +237,7 @@ void Potion::ShowInfo()
 		cout.width(15);
 		cout << this->GetName();
 		cout.width(8);
-		cout << this->Count;
+		cout << this->count;
 		cout.width(13);
 		cout << "MP +70";
 	}
@@ -245,13 +246,13 @@ void Potion::ShowInfo()
 		cout.width(15);
 		cout << this->GetName();
 		cout.width(8);
-		cout << this->Count;
+		cout << this->count;
 		cout.width(13);
 		cout << "MP +80";
 	}
 }
 
-int Potion::IsEquipment()
+int Potion::GetItemType()
 {
-	return 0;
+	return static_cast<int> (ItemType::Potion);
 }

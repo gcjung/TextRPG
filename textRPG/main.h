@@ -37,7 +37,6 @@ class Item;
 #define MIN_BATTLE_LOG_ROW  27
 
 
-void Show_Slime();
 void Init_Console();
 int Avoid_Garbage_getch();
 int Percent(int percent);

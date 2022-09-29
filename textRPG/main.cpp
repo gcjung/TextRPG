@@ -4,9 +4,9 @@
 Character My_Character;
 char tempMap[27][68];
 mutex m;	// gotoxy로 커서위치가 겹쳐지는 걸 방지
+
 int main()
 {
-	
 	Init_Console();
 	srand((int)time(NULL));	// 난수생성을 위한 시드값 제공
 
@@ -23,7 +23,7 @@ int main()
 			game_state = Game::Playing_Game_State();	// 게임화면
 			break;
 
-		case GAME_EXIT:		// 게임종료
+		case GAME_EXIT:			// 게임종료
 			return 0;
 		}
 	}
@@ -63,9 +63,11 @@ void Init_Console()
 	removeCursor();
 }
 
-void Show_Slime()
+#pragma region MyRegion
+/*
+void ShowSlime()
 {
-	int row = 35; 
+	int row = 35;
 	//gotoxy(16, row++);
 	gotoxy(7, row++); cout << "                         . = @@!.     ";
 	gotoxy(7, row++); cout << "                       ~=#=**=$#-     ";
@@ -100,3 +102,85 @@ void Show_Slime()
 	gotoxy(7, row++); cout << "           -***,.,,,,,,.*!#:-         ";
 	gotoxy(7, row++); cout << "              ..,$@@@@;...            ";
 }
+void ShowNeki()
+{
+	int row = 35;
+
+	gotoxy(7, row++); cout << "            ,~~~~~~~-.                ";
+	gotoxy(7, row++); cout << "          ,-!=*=$*==*~-               ";
+	gotoxy(7, row++); cout << "         ,;*$*!**~****=-              ";
+	gotoxy(7, row++); cout << "        .;:-!**!. ~**!*=~             ";
+	gotoxy(7, row++); cout << "       ,*-.;*:*!  -*!;;!=:            ";
+	gotoxy(7, row++); cout << "      ,;-,;$**#*  .~!;;!=:            ";
+	gotoxy(7, row++); cout << "     ,;~ ;$#*=#$; .-!;;;**~           ";
+	gotoxy(7, row++); cout << "     -*, *##!*#@= .-!;;;!=;           ";
+	gotoxy(7, row++); cout << "     -*, *#=;*#@= .-!;:;!=;           ";
+	gotoxy(7, row++); cout << "    ,::. ~*!:*#=~ .-!;:;!=;           ";
+	gotoxy(7, row++); cout << "    -*;. ~!;:**~  ,:;::;!=;           ";
+	gotoxy(7, row++); cout << "    -==:~!;~:!:  ,:!:::;!=;           ";
+	gotoxy(7, row++); cout << "    ~*!==:~~:!;--:*;::;!*=;           ";
+	gotoxy(7, row++); cout << "    -!!;::::::!$$=;;;;;!*=:           ";
+	gotoxy(7, row++); cout << "     -!!!!!!!!!*=!!**!!!=;.           ";
+	gotoxy(7, row++); cout << "      -!!=$=======**!!!*=:            ";
+	gotoxy(7, row++); cout << "       ,-*$$===***!!;;!$:.            ";
+	gotoxy(7, row++); cout << "         ,-!$=**!!!;;;*$~             ";
+	gotoxy(7, row++); cout << "          .-;$==*;:;!=~.              ";
+	gotoxy(7, row++); cout << "            ;!--~~:;!$-               ";
+	gotoxy(7, row++); cout << "           ~;:,.,-:!*:.~;;;~          ";
+	gotoxy(7, row++); cout << "          .;;,,.,-:!=--*==$*:~        ";
+	gotoxy(7, row++); cout << "           ::...,~;*=:**!!!*==:.      ";
+	gotoxy(7, row++); cout << "           ;;-,,~:;*==*!;;;!!=$,-~~~, ";
+	gotoxy(7, row++); cout << "           ;;,,,~:;!=*!!;;;!!*$:!===;,";
+	gotoxy(7, row++); cout << "           ::,.,~~:!*!!;:;;!!!=*!***$:";
+	gotoxy(7, row++); cout << "           :;-.,~~:;!!;;;!!!;!!!;!*==~";
+	gotoxy(7, row++); cout << "            :!--~~~:;;;!!**!!;:;!**$~ ";
+	gotoxy(7, row++); cout << "            ::,.-~:;!*!*=!::;;!!**=~. ";
+	gotoxy(7, row++); cout << "            .~;~~:;!**=:,:;::;**=*:.  ";
+	gotoxy(7, row++); cout << "             .:****==:-. .:***==:-.   ";
+	gotoxy(7, row++); cout << "              .~~~~~~.    .~~~~-.     ";
+
+
+	//gotoxy(7, row++);  cout << "               ----~-----.                              ";
+	//gotoxy(7, row++);  cout << "            ..-##$######$:..                            ";
+	//gotoxy(7, row++);  cout << "            ;$$#!;*#:*$***=!.                           ";
+	//gotoxy(7, row++);  cout << "          .:;:;#;!*:,-!=!***;,                          ";
+	//gotoxy(7, row++);  cout << "        .:!,,:=;*=. .~$!;;!=;,                          ";
+	//gotoxy(7, row++);  cout << "       .:*,.;$;:=*.  ~=!;;;*=;                          ";
+	//gotoxy(7, row++);  cout << "       ;!, ;#$;=#=.  .-=!:;!=:                          ";
+	//gotoxy(7, row++);  cout << "     .!;-.!$#$;$@#*, .,=!:;;**;                         ";
+	//gotoxy(7, row++);  cout << "     .$: ,$##$;$#@#, .,=!:;!!$*	                        ";
+	//gotoxy(7, row++);  cout << "     .=: ,$@#*:=#@#,..,=!:;;!==.                        ";
+	//gotoxy(7, row++);  cout << "     ,=: ,=#*::$##$, .,=;:;;!$*.                        ";
+	//gotoxy(7, row++);  cout << "    ,!~,  -**~:=#=-  .,*!::;!=*.                        ";
+	//gotoxy(7, row++);  cout << "    -#!- .:!;~:=*~.  ,;!::;;!=*.                        ";
+	//gotoxy(7, row++);  cout << "    -#$;~~*;~~:=:.  ,:*;::;;!=*.                        ";
+	//gotoxy(7, row++);  cout << "    -$!*=*:~~::*;.,,;*;:::;!!==.                        ";
+	//gotoxy(7, row++);  cout << "    -$*;;;:~~~~;!===*;::;;;!*==.                        ";
+	//gotoxy(7, row++);  cout << "    .:=!;;:::::;!==*;;*!!;!!=*~                         ";
+	//gotoxy(7, row++);  cout << "      ;**!!!**!!**= *!*=*!!!*$;                         ";
+	//gotoxy(7, row++);  cout << "        ;==$#$$$$$$$$$=!!!!!*=;                         ";
+	//gotoxy(7, row++);  cout << "        .,-$##$===****!!!!;!=~.                         ";
+	//gotoxy(7, row++);  cout << "           -~!#$***!!!!;;;!*$-                          ";
+	//gotoxy(7, row++);  cout << "             -!!*==**!;;:;**;,                          ";
+	//gotoxy(7, row++);  cout << "               .*$***;:;;;**.                           ";
+	//gotoxy(7, row++);  cout << "               .*!,.,-~;!!**. .                         ";
+	//gotoxy(7, row++);  cout << "              ,!!~,,,,-:!*!-.:*!!*-                     ";
+	//gotoxy(7, row++);  cout << "              ,=:,,.,,-:!=;.~*$=$$!~~.                  ";
+	//gotoxy(7, row++);  cout << "              ,=~ . .-~;!=!-$=!!!!=$$~.                 ";
+	//gotoxy(7, row++);  cout << "              ,=:,..,~;!!=$=*!!;;!!**$~ .               ";
+	//gotoxy(7, row++);  cout << "              ,$:-,-~~;;!===*!;;;!;!*$:-****!.          ";
+	//gotoxy(7, row++);  cout << "              ,$~,,,~::;!==*!;:;;!!!*$!;=====;.         ";
+	//gotoxy(7, row++);  cout << "              ,=~...-~::;**!!;:;;!!!!==*!!!*=$-         ";
+	//gotoxy(7, row++);  cout << "              ,*:,.,-~~:;!!;;;;;!!!;!!*!;!!*==-         ";
+	//gotoxy(7, row++);  cout << "               ,!;--~~~~::;;;!!!**!!;;;;!!*$=-          ";
+	//gotoxy(7, row++);  cout << "                *;,.,~~~:;!!!*=*;:;!!;;!**=*~.          ";
+	//gotoxy(7, row++);  cout << "                ::-.,-~:;!*==!;!;~~::!!*=$*~            ";
+	//gotoxy(7, row++);  cout << "                 ~*::~~;!*===- ,*;~~:***==~             ";
+	//gotoxy(7, row++);  cout << "                  ~=$$$###!,.   ,*$$###!...             ";
+	//gotoxy(7, row++);  cout << "                  .-------,      -~-~~-,                ";
+
+}
+*/
+#pragma endregion
+
+

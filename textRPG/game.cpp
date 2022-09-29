@@ -1,7 +1,20 @@
 #include "main.h"
 
 
-Game::Game() 
+
+extern mutex m;
+extern char tempMap[27][68];
+extern Character My_Character;
+int Battle_log_row = MIN_BATTLE_LOG_ROW;
+
+bool FLAG_mapUpdate = false;		// true - 맵을 업데이트 해라
+bool FLAG_infoWindowUpdate = false; // true - 캐릭터 정보창 업데이트 해라
+bool FLAG_using_store = false;		// true - 현재 상점을 이용중이다
+bool FLAG_playing_battle = false;	// true - 현재 몬스터와 전투중이다
+bool FLAG_Monster_Observation = false; // true - 관찰하기를 이용한 몬스터 추가정보를 보는 중이다.
+
+
+Game::Game()
 {
 	//cout << "게임을 실행합니다" << endl;
 }
@@ -15,22 +28,10 @@ string Game::Class_ItoS(char chractor_class)			// int값을 받고 string으로 반환
 		return "마법사";
 	else
 		return "쓰레기값 나올리가 없음!";	// << 나올수없게 짜놓음
-	
+
 }
-extern mutex m;
-extern char tempMap[27][68];
-extern Character My_Character;
-int Battle_log_row = MIN_BATTLE_LOG_ROW;
-
-bool FLAG_mapUpdate = false;		// true - 맵을 업데이트 해라
-bool FLAG_infoWindowUpdate = false; // true - 캐릭터 정보창 업데이트 해라
-bool FLAG_using_store = false;		// true - 현재 상점을 이용중이다
-bool FLAG_playing_battle = false;	// true - 현재 몬스터와 전투중이다
-bool FLAG_Monster_Observation = false; // true - 관찰하기를 이용한 몬스터 추가정보를 보는 중이다.
-
-
 //=====================================================
-// 초 - 게임 화면에 관련된 함수들
+// 게임 전 - 게임 화면에 관련된 함수들
 //=====================================================
 int Game::Initial_Game_State()					
 {
@@ -40,24 +41,24 @@ int Game::Initial_Game_State()
 		switch (game_state)
 		{
 		case INIT_GAME:
-			game_state = Init_Screen();
+			game_state = Init_Screen();		// 시작 화면
 			break;
 
-		case NEW_GAME_START:
+		case NEW_GAME_START:				// 캐릭터 생성화면으로
 			game_state = Character_Create_Screen();
 			break;
 
-		case CONTINUE_GAME_START:			// 추가 예정
+		case CONTINUE_GAME_START:			
 			//break;
 
 		case GAME_INFO:
 			game_state = GameInfo_Screen();
 			break;
 
-		case GAME_PLAYING_STATE:			// 게임 초기State 에서 게임 진행State으로 넘어감
+		case GAME_PLAYING_STATE:			// 게임 진행State으로 넘어감
 			return GAME_PLAYING_STATE;
 
-		case GAME_EXIT:
+		case GAME_EXIT:						// 게임 종료
 			return GAME_EXIT;	
 		}
 	}
@@ -204,17 +205,12 @@ int Game::Character_Create_Screen()						// 캐릭터 생성 화면 (닉네임, 직업 선택)
 
 		default:
 			Set_Color %= MAX_CONSOLE_COLOR_NUM;
-			gotoxy(15, 20); setcolor(Set_Color, WHITE);	// 출력 위치지정, 색지정	
+			gotoxy(15, 20); setcolor(Set_Color++, WHITE);	// 출력 위치지정, 색지정	
 			if (input >= MAX_ASCII_NUM)	// 아스키값 넘는 한글을 표시
-			{
 				cout << "<한글>을 입력하였습니다. 영어로 입력하세요";
-			}
 			else
-			{
-				cout << "< " << input << " >을 입력하였습니다. 다시 눌러주세요   ";			
-			}
+				cout << "< " << input << " >을 입력하였습니다. 다시 눌러주세요   ";	
 			setcolor(WHITE, BLACK);
-			Set_Color++;
 			break;
 		}
 		
@@ -326,7 +322,7 @@ int Game::Playing_Game_Screen()
 	// 처음화면 출력
 	Playing_Game_Frame();
 	Character_Info_Window(using_infoWindowType, dungeonStage);
-	Map_Window(dungeonStage);
+	Make_Map_Dungeon(dungeonStage);
 
 
 	// 게임 진행 및 키입력 
@@ -335,7 +331,7 @@ int Game::Playing_Game_Screen()
 		if (FLAG_mapUpdate)		// 다음 던전으로 진행 시, 맵 업데이트 
 		{
 			FLAG_mapUpdate = false;
-			Map_Window(dungeonStage);		
+			Make_Map_Dungeon(dungeonStage);
 		}
 
 		if (FLAG_infoWindowUpdate)	// 캐릭 정보창 업데이트(상점이용, 아이템이용시)
@@ -361,19 +357,19 @@ int Game::Playing_Game_Screen()
 			break;
 		case 'w':
 		case 'W':
-			My_Character.pos.Move(0, -1, &dungeonStage, &using_infoWindowType);
+			My_Character.pos.Move(0, -1, dungeonStage, using_infoWindowType);
 			break;
 		case 'a':
 		case 'A':
-			My_Character.pos.Move(-1, 0, &dungeonStage, &using_infoWindowType);
+			My_Character.pos.Move(-1, 0, dungeonStage, using_infoWindowType);
 			break;
 		case 's':
 		case 'S':
-			My_Character.pos.Move(0, 1, &dungeonStage, &using_infoWindowType);
+			My_Character.pos.Move(0, 1, dungeonStage, using_infoWindowType);
 			break;
 		case 'd':
 		case 'D':
-			My_Character.pos.Move(1, 0, &dungeonStage, &using_infoWindowType);
+			My_Character.pos.Move(1, 0, dungeonStage, using_infoWindowType);
 			break;
 
 		case 'p':
@@ -388,11 +384,11 @@ int Game::Playing_Game_Screen()
 			Character_Info_Window(using_infoWindowType, dungeonStage);
 			break;
 		
-		case SPACE_BAR: 
-			Playing_Game_Frame();
-			Character_Info_Window(using_infoWindowType, dungeonStage);
-			Map_Window(dungeonStage);
-			break;	//여기까지 테스트용도
+		//case SPACE_BAR: 
+		//	Playing_Game_Frame();
+		//	Character_Info_Window(using_infoWindowType, dungeonStage);
+		//	Make_Map_Dungeon(dungeonStage);
+		//	break;	//여기까지 테스트용도
 
 		default:
 			Set_Color %= MAX_CONSOLE_COLOR_NUM;
@@ -409,7 +405,7 @@ int Game::Playing_Game_Screen()
 		}
 		if (My_Character.GetCurrentHP() <= 0)	// 캐릭터 부활시 처리
 		{
-			My_Character.SetResurrection();
+			My_Character.Dead();
 			FLAG_infoWindowUpdate = true;
 		}
 	
@@ -448,39 +444,8 @@ void Game::Playing_Game_Frame()		// 전체 틀
 //=====================================================
 // 중 - 맵 출력 관련 함수
 //=====================================================
-void Game::Map_Window(int dungeonStage)
-{
-	switch (dungeonStage)
-	{
-	case 1:
-		Make_Map_Dungeon1(dungeonStage);
-		break;
-	case 2:
-		Make_Map_Dungeon2(dungeonStage);
-		break;
-	case 3:
-		Make_Map_Dungeon3(dungeonStage);
-		break;
-	case 4:
-		break;
-	case 5:
-		break;
-	case 6:
-		break;
-	case 7:
-		break;
-	case 8:
-		break;
-	case 9:
-		break;
-	case 10:
-		break;
-	}
-	
-}
 void Game::Make_Map_Dungeon(int dungeonStage)
 {
-
 	char map1[27][68] = {
 		{"1111111111111111111111111111111111111111111111111111111111111111111"},
 		{"10000000s0000000110000000000000000000000000011111000000000000000001"},
@@ -509,67 +474,64 @@ void Game::Make_Map_Dungeon(int dungeonStage)
 		{"1000000001100000000000000000011000000000000000000000000000000000001"},
 		{"1000000001100000000000000000011000000000000000000000000000000000001"},
 		{"1111111111111111111111111111111111111111111111111111111111111111111"}
-
 	};
 	char map2[27][68] = {
-	{"1111111111111111111111111111111111111111111111111111111111111111111"},
-	{"1000000000000000000000011100000000000000000000000000000111100000001"},
-	{"100000000000000000000001110000000s000000000000000000000111100000001"},
-	{"100c011000000111000000011100000000000000000000000000000111100000dd1"},	// c = character
-	{"1000011000000111000000011100000000000000000000000000000111100000dd1"},
-	{"1000011000000111000000011100000000000000000000000000000111100000dd1"},
-	{"1000011000000111000000011100000111000000111111111110000111100000001"},
-	{"1000011000000111000000000000000111000000111111111110000111100000001"},
-	{"1000011000000111000000000000000111000000000000000000000111100000001"},
-	{"1000011000000111000000000000000111000000000000000000000111100000001"},
-	{"1000000000000111000000000000000000000000000000000000000111100000001"},
-	{"1000000000000111000000000000000000000000000000000000000111100000001"},
-	{"1000011111000111001111111000001111100000000000000000000111100000001"},
-	{"1000011000000000000000000000000000000000000001111111111111100000001"},
-	{"1000011000000000000000000000000000000000000001111111111111100000001"},
-	{"1000011000000000000111000000000000000000000000000000000111100000001"},
-	{"1000011000000000000111000000000000000000000000000000000111100000001"},
-	{"1000011000000000111111110000000001111000000000000000000111100000001"},
-	{"1000011000011111111111111100000001111000000000000011111110000000001"},
-	{"1000011000011111111111111100000001111000000000000011111110000000001"},
-	{"1000011000000000000111000000000001111000000000000000011110000000001"},
-	{"1000011000000000000111000000000001111000000111000000000000000000001"},
-	{"1000011000000000s00000000000000001111000000111000000000000000000001"},	// s = store
-	{"1000011000000000000000000000000001111000000000000000000000000000001"},
-	{"1000000000000000000000000000000001111000000000000000000000000000001"},
-	{"1000000000000000000000000000000001111000000000000000000000000000001"},
-	{"1111111111111111111111111111111111111111111111111111111111111111111"}
-
+		{"1111111111111111111111111111111111111111111111111111111111111111111"},
+		{"1000000000000000000000011100000000000000000000000000000111100000001"},
+		{"100000000000000000000001110000000s000000000000000000000111100000001"},
+		{"100c011000000111000000011100000000000000000000000000000111100000dd1"},	// c = character
+		{"1000011000000111000000011100000000000000000000000000000111100000dd1"},
+		{"1000011000000111000000011100000000000000000000000000000111100000dd1"},
+		{"1000011000000111000000011100000111000000111111111110000111100000001"},
+		{"1000011000000111000000000000000111000000111111111110000111100000001"},
+		{"1000011000000111000000000000000111000000000000000000000111100000001"},
+		{"1000011000000111000000000000000111000000000000000000000111100000001"},
+		{"1000000000000111000000000000000000000000000000000000000111100000001"},
+		{"1000000000000111000000000000000000000000000000000000000111100000001"},
+		{"1000011111000111001111111000001111100000000000000000000111100000001"},
+		{"1000011000000000000000000000000000000000000001111111111111100000001"},
+		{"1000011000000000000000000000000000000000000001111111111111100000001"},
+		{"1000011000000000000111000000000000000000000000000000000111100000001"},
+		{"1000011000000000000111000000000000000000000000000000000111100000001"},
+		{"1000011000000000111111110000000001111000000000000000000111100000001"},
+		{"1000011000011111111111111100000001111000000000000011111110000000001"},
+		{"1000011000011111111111111100000001111000000000000011111110000000001"},
+		{"1000011000000000000111000000000001111000000000000000011110000000001"},
+		{"1000011000000000000111000000000001111000000111000000000000000000001"},
+		{"1000011000000000s00000000000000001111000000111000000000000000000001"},	// s = store
+		{"1000011000000000000000000000000001111000000000000000000000000000001"},
+		{"1000000000000000000000000000000001111000000000000000000000000000001"},
+		{"1000000000000000000000000000000001111000000000000000000000000000001"},
+		{"1111111111111111111111111111111111111111111111111111111111111111111"}
 	};
 	char map3[27][68] = {
-	{"1111111111111111111111111111111111111111111111111111111111111111111"},
-	{"1000000000000111100000000000000000001111000000000000000000000000001"},
-	{"100000000000011110000000000000000000111100000000000000000000c000001"},
-	{"1000011000000111100000000000s00000001111000000000000000000000000dd1"},	// c = character
-	{"1000011000000111100000000000000000001111000000111000000000000000dd1"},
-	{"1000011000000111100000000000000000001111000000111000000000000000dd1"},
-	{"1000011000000000000000000000000000001111000000111000000111110000001"},
-	{"1000011000000000000000000111000000000000000000111000000111110000001"},
-	{"1000011000000011100000000111000000000000000000111000000111110000001"},
-	{"1000011000000011100000000000000000000000000000111000000000000000001"},
-	{"1000000000000000000000000000000000000000000000111000000000000000001"},
-	{"1000000000000000000000000000000000000000000000111000000000000000001"},
-	{"1000011111000111001111111000001111100000000100111111100001111111111"},
-	{"1000011000000000000000000000000000000000001101111111000001111111111"},
-	{"1000011000000000000000000000000000000000110011111000000000000000001"},
-	{"1000011000000000000000000000000000000000100001110000000000001000001"},
-	{"1000011000001111110000000000000000000000000000111000000000000000001"},
-	{"1000011000001111110000000011000000000000000000111000000000000000001"},
-	{"1000011000000000000000001111000000000000000000111000000000000000001"},
-	{"1000011000000000000000111011000000000000000000111000000000000000001"},
-	{"1dd0011000000000000001100011000000000000001000111000001111100000001"},
-	{"1dd0011000000000000110000011000000000000011000000000001111100000001"},
-	{"1dd0011000000000s01100000011000000000000110000000000000000000000001"},	// s = store
-	{"1000011000000000000000000011000000000001100000000000000000000000001"},
-	{"1000000000000000000000000011000000000001000000000000000000000000001"},
-	{"1000000000000000000000000011000000000000000000000000000000000000001"},
-	{"1111111111111111111111111111111111111111111111111111111111111111111"}
-
+		{"1111111111111111111111111111111111111111111111111111111111111111111"},
+		{"1000000000000111100000000000000000001111000000000000000000000000001"},
+		{"100000000000011110000000000000000000111100000000000000000000c000001"},
+		{"1000011000000111100000000000s00000001111000000000000000000000000dd1"},	// c = character
+		{"1000011000000111100000000000000000001111000000111000000000000000dd1"},
+		{"1000011000000111100000000000000000001111000000111000000000000000dd1"},
+		{"1000011000000000000000000000000000001111000000111000000111110000001"},
+		{"1000011000000000000000000111000000000000000000111000000111110000001"},
+		{"1000011000000011100000000111000000000000000000111000000111110000001"},
+		{"1000011000000011100000000000000000000000000000111000000000000000001"},
+		{"1000000000000000000000000000000000000000000000111000000000000000001"},
+		{"1000000000000000000000000000000000000000000000111000000000000000001"},
+		{"1000011111000111001111111000001111100000000100111111100001111111111"},
+		{"1000011000000000000000000000000000000001111111111111000001111111111"},
+		{"1000011000000000000000000000000000000001110011111000000000000000001"},
+		{"1000011000000000000000000000000000000001100001110000000000001000001"},
+		{"1000011000001111110000000000000000000111000000111000000000000000001"},
+		{"1000011000001111110000000011000000000000000000111000000000000000001"},
+		{"1000011000000000000000011111000000000000000000111000000000000000001"},
+		{"1000011000000000000000111011000000000000000000111000000000000000001"},
+		{"1dd0011000000000000001100011000000000000001000111000001111100000001"},
+		{"1dd0011000000000000110000011000000000000011000000000001111100000001"},
+		{"1dd0011000000000s01100000011000000000000110000000000000110000000001"},	// s = store
+		{"1000011000000000000000000011000000000001100000000000000000000000001"},
+		{"1000000000000000000000000011000000000001000000000000000000000000001"},
+		{"1000000000000000000000000011000000000000000000000000000000000000001"},
+		{"1111111111111111111111111111111111111111111111111111111111111111111"}
 	};
 
 	switch (dungeonStage)
@@ -638,309 +600,6 @@ void Game::Make_Map_Dungeon(int dungeonStage)
 		gotoxy(2, 1 + 1 + i); // Playing_Game_Frame에 의해 x = 2, y = 1로 시작한 후, y+1부터 출력
 	}
 }
-void Game::Make_Map_Dungeon1(int dungeonStage)
-{
-
-	char map[27][68] = {
-		{"1111111111111111111111111111111111111111111111111111111111111111111"},
-		{"10000000s0000000110000000000000000000000000011111000000000000000001"},
-		{"1000000000000000110000000000000000000000000011111000000000000000001"},
-		{"100c110000011000110000000000000000000000000011111000000000111111111"},	// c = character
-		{"1000110000011000110000000000000000000000000011111000000000111111111"},
-		{"1000110000011000000000000000000000000000000011111000000000000000001"},
-		{"1000110000011000000000000000000000000000000011111000000000000000001"},
-		{"1000110000011000110000000000001111100000000011111000000000000000001"},
-		{"1000110000011000110000000000001111100000000011111000000000011110001"},
-		{"1000110000011000110000000000001111100000000000000000000000011110001"},
-		{"1000000000011000000000000000001111100000000000000000000000011110001"},
-		{"1000000000011000000000000000001111100000000111111000000000011110001"},
-		{"1000111111111000111111111100001111100000000110011000000000000000001"},
-		{"1000110000000000000000001100000000000000000110011000000000000000001"},
-		{"1000110000000000000000001100000000000000000000000000000000000000001"},
-		{"1000110000000000011111111111111111111000000000000000000000000000001"},
-		{"1000110000000000000000001100000000000000000000000000000000000000001"},
-		{"1000110001100000000000001100000000000000000000000001111100011111111"},
-		{"1000110001100000000000001100000000000000000000000000001100000000dd1"},
-		{"1000110001111111100000001100000000000011111111110000001100000000dd1"},
-		{"1000110001100000000000001100011000000011111111110000001100000000dd1"},
-		{"1000110001100000000000001100011000000011111111110000001100000000001"},
-		{"100011000110000011111111110001100000001111111111000000000s000000001"},	// s = store
-		{"1000110001100000000000000000011000000000000000000000000000000000001"},
-		{"1000000001100000000000000000011000000000000000000000000000000000001"},
-		{"1000000001100000000000000000011000000000000000000000000000000000001"},
-		{"1111111111111111111111111111111111111111111111111111111111111111111"}
-	
-	};
-
-	CreateMonster(map, MAX_STAGE1_MONSTER_NUM);
-
-	memcpy(tempMap, map, sizeof(tempMap));
-	
-	// 맵 구현부 (2차원배열을 맵으로 만들어 출력)
-	gotoxy(2, 1);		// Playing_Game_Frame에 의해 x = 2, y = 1로 시작
-	for (int i = 0; i < 27; i++)
-	{
-		for (int j = 0; j < 68; j++)
-		{
-			char temp = tempMap[i][j];
-
-			if (temp == '0')
-				cout << " ";
-			else if (temp == '1')			// 벽위치
-			{
-				setcolor(WHITE, WHITE);
-				cout << "#";
-				setcolor(WHITE, BLACK);
-			}
-			else if (temp == 'c')			// 내 캐릭터 위치
-			{
-				setcolor(YELLOW, BLACK);	
-				My_Character.pos.x = j + 2;// 캐릭터 좌표값 설정
-				My_Character.pos.y = i + 1;// 캐릭터 좌표값 설정
-				cout << "@";
-				tempMap[i][j] = '0';	// 캐릭터 시작위치를 '0'값으로 변경(나중에 이동할수 있도록)
-				setcolor(WHITE, BLACK);
-			}
-			else if (temp == 'm')			// 몬스터
-			{
-				//setcolor(LIGHTGREEN, LIGHTGREEN);	// 현재 테스트용으로 사용중
-				setcolor(BLACK, BLACK); // 몬스터 맵에 안보이게 하기 (몬스터전투 구현완료시 사용할 것)
-				cout << "m";
-				setcolor(WHITE, BLACK);
-			}
-			else if (temp == 's')			// store 위치
-			{
-				setcolor(LIGHTGREEN, BLACK);
-				cout << "#";
-				setcolor(WHITE, BLACK);
-			}
-			else if (temp == 'd')			// Destination 위치
-			{
-				setcolor(LIGHTPURPLE, LIGHTPURPLE);
-				cout << "*";
-				setcolor(WHITE, BLACK);
-			}
-		}
-		gotoxy(2, 1 + 1 + i); // Playing_Game_Frame에 의해 x = 2, y = 1로 시작한 후, y+1부터 출력
-	}
-}
-void Game::Make_Map_Dungeon2(int dungeonStage)
-{
-	char map[27][68] = {
-		{"1111111111111111111111111111111111111111111111111111111111111111111"},
-		{"1000000000000000000000011100000000000000000000000000000111100000001"},
-		{"100000000000000000000001110000000s000000000000000000000111100000001"},
-		{"100c011000000111000000011100000000000000000000000000000111100000dd1"},	// c = character
-		{"1000011000000111000000011100000000000000000000000000000111100000dd1"},
-		{"1000011000000111000000011100000000000000000000000000000111100000dd1"},
-		{"1000011000000111000000011100000111000000111111111110000111100000001"},
-		{"1000011000000111000000000000000111000000111111111110000111100000001"},
-		{"1000011000000111000000000000000111000000000000000000000111100000001"},
-		{"1000011000000111000000000000000111000000000000000000000111100000001"},
-		{"1000000000000111000000000000000000000000000000000000000111100000001"},
-		{"1000000000000111000000000000000000000000000000000000000111100000001"},
-		{"1000011111000111001111111000001111100000000000000000000111100000001"},
-		{"1000011000000000000000000000000000000000000001111111111111100000001"},
-		{"1000011000000000000000000000000000000000000001111111111111100000001"},
-		{"1000011000000000000111000000000000000000000000000000000111100000001"},
-		{"1000011000000000000111000000000000000000000000000000000111100000001"},
-		{"1000011000000000111111110000000001111000000000000000000111100000001"},
-		{"1000011000011111111111111100000001111000000000000011111110000000001"},
-		{"1000011000011111111111111100000001111000000000000011111110000000001"},
-		{"1000011000000000000111000000000001111000000000000000011110000000001"},
-		{"1000011000000000000111000000000001111000000111000000000000000000001"},
-		{"1000011000000000s00000000000000001111000000111000000000000000000001"},	// s = store
-		{"1000011000000000000000000000000001111000000000000000000000000000001"},
-		{"1000000000000000000000000000000001111000000000000000000000000000001"},
-		{"1000000000000000000000000000000001111000000000000000000000000000001"},
-		{"1111111111111111111111111111111111111111111111111111111111111111111"}
-
-	};
-
-	CreateMonster(map, MAX_STAGE1_MONSTER_NUM);
-
-	memcpy(tempMap, map, sizeof(tempMap));
-
-	gotoxy(2, 1);		// Playing_Game_Frame에 의해 x = 2, y = 1로 시작
-	for (int i = 0; i < 27; i++)
-	{
-		for (int j = 0; j < 68; j++)
-		{
-			char temp = tempMap[i][j];
-
-			if (temp == '0')
-				cout << " ";
-			else if (temp == '1')			// 벽위치
-			{
-				setcolor(WHITE, WHITE);
-				cout << "#";
-				setcolor(WHITE, BLACK);
-			}
-			else if (temp == 'c')			// 내 캐릭터 위치
-			{
-				setcolor(YELLOW, BLACK);
-				My_Character.pos.x = j + 2;// 캐릭터 좌표값 설정
-				My_Character.pos.y = i + 1;// 캐릭터 좌표값 설정
-				cout << "@";
-				tempMap[i][j] = '0';	// 캐릭터 시작위치를 '0'값으로 변경(나중에 이동할수 있도록)
-				setcolor(WHITE, BLACK);
-			}
-			else if (temp == 'm')			// 몬스터
-			{
-				//setcolor(LIGHTGREEN, LIGHTGREEN);	// 현재 테스트용으로 사용중
-				setcolor(BLACK, BLACK); // 몬스터 맵에 안보이게 하기 (몬스터전투 구현완료시 사용할 것)
-				cout << "m";
-				setcolor(WHITE, BLACK);
-			}
-			else if (temp == 's')			// store 위치
-			{
-				setcolor(LIGHTGREEN, BLACK);
-				cout << "#";
-				setcolor(WHITE, BLACK);
-			}
-			else if (temp == 'd')			// Destination 위치
-			{
-				setcolor(LIGHTPURPLE, LIGHTPURPLE);
-				cout << "*";
-				setcolor(WHITE, BLACK);
-			}
-		}
-		gotoxy(2, 1 + 1 + i); // Playing_Game_Frame에 의해 x = 2, y = 1로 시작한 후, y+1부터 출력
-	}
-
-
-	// 맵 원본 표시 지우지 말것 !!
-	//gotoxy(2, 1);
-	//for (int i = 0; i < 27; i++)
-	//{
-	//	for (int j = 0; j < 68; j++)
-	//	{
-	//		char temp = tempMap[i][j];
-	//		cout << temp;
-	//		
-	//	}
-	//	gotoxy(2, 1 + 1 + i); // Playing_Game_Frame에 의해 x = 2, y = 1로 시작한 후, y+1부터 출력
-	//}
-}
-void Game::Make_Map_Dungeon3(int dungeonStage)
-{
-	char map[27][68] = {
-		{"1111111111111111111111111111111111111111111111111111111111111111111"},
-		{"1000000000000111100000000000000000001111000000000000000000000000001"},
-		{"100000000000011110000000000000000000111100000000000000000000c000001"},
-		{"1000011000000111100000000000s00000001111000000000000000000000000dd1"},	// c = character
-		{"1000011000000111100000000000000000001111000000111000000000000000dd1"},
-		{"1000011000000111100000000000000000001111000000111000000000000000dd1"},
-		{"1000011000000000000000000000000000001111000000111000000111110000001"},
-		{"1000011000000000000000000111000000000000000000111000000111110000001"},
-		{"1000011000000011100000000111000000000000000000111000000111110000001"},
-		{"1000011000000011100000000000000000000000000000111000000000000000001"},
-		{"1000000000000000000000000000000000000000000000111000000000000000001"},
-		{"1000000000000000000000000000000000000000000000111000000000000000001"},
-		{"1000011111000111001111111000001111100000000100111111100001111111111"},
-		{"1000011000000000000000000000000000000000001101111111000001111111111"},
-		{"1000011000000000000000000000000000000000110011111000000000000000001"},
-		{"1000011000000000000000000000000000000000100001110000000000001000001"},
-		{"1000011000001111110000000000000000000000000000111000000000000000001"},
-		{"1000011000001111110000000011000000000000000000111000000000000000001"},
-		{"1000011000000000000000001111000000000000000000111000000000000000001"},
-		{"1000011000000000000000111011000000000000000000111000000000000000001"},
-		{"1dd0011000000000000001100011000000000000001000111000001111100000001"},
-		{"1dd0011000000000000110000011000000000000011000000000001111100000001"},
-		{"1dd0011000000000s01100000011000000000000110000000000000000000000001"},	// s = store
-		{"1000011000000000000000000011000000000001100000000000000000000000001"},
-		{"1000000000000000000000000011000000000001000000000000000000000000001"},
-		{"1000000000000000000000000011000000000000000000000000000000000000001"},
-		{"1111111111111111111111111111111111111111111111111111111111111111111"}
-
-	};
-
-	int stage_monster_num = 0;
-
-	//빈공간에 몬스터 생성함수
-	if (stage_monster_num <= MAX_STAGE2_MONSTER_NUM)
-	{
-		for (int i = 0; i < 27; i++)
-		{
-			for (int j = 0; j < 68; j++)
-			{
-				if (map[i][j] == '0')
-				{
-					if (Percent(5))
-					{
-						map[i][j] = 'm';
-						stage_monster_num++;
-					}
-				}
-
-			}
-		}
-	}
-
-	memcpy(tempMap, map, sizeof(tempMap));
-
-	// 맵 구현부 (2차원배열을 맵으로 만들어 출력)
-	gotoxy(2, 1);		// Playing_Game_Frame에 의해 x = 2, y = 1로 시작
-	for (int i = 0; i < 27; i++)
-	{
-		for (int j = 0; j < 68; j++)
-		{
-			char temp = tempMap[i][j];
-
-			if (temp == '0')
-				cout << " ";
-			else if (temp == '1')			// 벽위치
-			{
-				setcolor(WHITE, WHITE);
-				cout << "#";
-				setcolor(WHITE, BLACK);
-			}
-			else if (temp == 'c')			// 내 캐릭터 위치
-			{
-				setcolor(YELLOW, BLACK);
-				My_Character.pos.x = j + 2;// 캐릭터 좌표값 설정
-				My_Character.pos.y = i + 1;// 캐릭터 좌표값 설정
-				cout << "@";
-				tempMap[i][j] = '0';	// 캐릭터 시작위치를 '0'값으로 변경(나중에 이동할수 있도록)
-				setcolor(WHITE, BLACK);
-			}
-			else if (temp == 'm')			// 몬스터
-			{
-				//setcolor(LIGHTGREEN, LIGHTGREEN);	// 현재 테스트용으로 사용중
-				setcolor(BLACK, BLACK); // 몬스터 맵에 안보이게 하기 (몬스터전투 구현완료시 사용할 것)
-				cout << "m";
-				setcolor(WHITE, BLACK);
-			}
-			else if (temp == 's')			// store 위치
-			{
-				setcolor(LIGHTGREEN, BLACK);
-				cout << "#";
-				setcolor(WHITE, BLACK);
-			}
-			else if (temp == 'd')			// Destination 위치
-			{
-				setcolor(LIGHTPURPLE, LIGHTPURPLE);
-				cout << "*";
-				setcolor(WHITE, BLACK);
-			}
-		}
-		gotoxy(2, 1 + 1 + i); // Playing_Game_Frame에 의해 x = 2, y = 1로 시작한 후, y+1부터 출력
-	}
-
-
-	// 맵 원본 표시 지우지 말것 !!
-	//gotoxy(2, 1);
-	//for (int i = 0; i < 27; i++)
-	//{
-	//	for (int j = 0; j < 68; j++)
-	//	{
-	//		char temp = tempMap[i][j];
-	//		cout << temp;
-	//		
-	//	}
-	//	gotoxy(2, 1 + 1 + i); // Playing_Game_Frame에 의해 x = 2, y = 1로 시작한 후, y+1부터 출력
-	//}
-}
 void Game::CreateMonster(char(&map)[27][68], int maxMonsterNum)
 {
 	int stage_monster_num = 0;
@@ -959,7 +618,6 @@ void Game::CreateMonster(char(&map)[27][68], int maxMonsterNum)
 					stage_monster_num++;
 				}
 			}
-
 		}
 	}
 
@@ -1002,7 +660,27 @@ void Game::Make_Map_Dungeon1(int dungeonStage)
 	};
 
 	CreateMonster(map, MAX_STAGE1_MONSTER_NUM);
+	//	int stage_monster_num = 0;
 
+	////빈공간에 몬스터 생성함수
+	//if (stage_monster_num <= MAX_STAGE2_MONSTER_NUM)
+	//{
+	//	for (int i = 0; i < 27; i++)
+	//	{
+	//		for (int j = 0; j < 68; j++)
+	//		{
+	//			if (map[i][j] == '0')
+	//			{
+	//				if (Percent(5))
+	//				{
+	//					map[i][j] = 'm';
+	//					stage_monster_num++;
+	//				}
+	//			}
+
+	//		}
+	//	}
+	//}
 	memcpy(tempMap, map, sizeof(tempMap));
 
 	// 맵 구현부 (2차원배열을 맵으로 만들어 출력)
@@ -1189,7 +867,7 @@ void Game::Remove_At_Battle_End()
 }
 
 // 상점 관련
-void Game::Store_Process(int dungeonStage,int* infoWindowType)
+void Game::Store_Process(int dungeonStage,int& infoWindowType)
 {
 	Remove_GameProcess_Window();
 	Store_Screen(dungeonStage);
@@ -1208,11 +886,11 @@ void Game::Store_Process(int dungeonStage,int* infoWindowType)
 		if (FLAG_infoWindowUpdate)		// 캐릭 정보창 업데이트
 		{
 			FLAG_infoWindowUpdate = false;
-			Character_Info_Window(*infoWindowType, dungeonStage);	// 정보창 업뎃
+			Character_Info_Window(infoWindowType, dungeonStage);	// 정보창 업뎃
 			My_Character.inventory.ShowInventory_In_Store();	// 상점내 인벤토리 업뎃
 		}
 
-		switch (input = Avoid_Garbage_getch())
+		switch (input = _getch())
 		{
 		case '1':
 		case '2':
@@ -1224,21 +902,17 @@ void Game::Store_Process(int dungeonStage,int* infoWindowType)
 		case '8':
 		case '9':
 			if (storeMode == BUY_MODE)
-			{
-				Store_Buy_Mode(dungeonStage, input);
-			}
+				Store_BuyMode(dungeonStage, input);
 			else if (storeMode == SELL_MODE)
-			{
-				Store_Sell_Mode(input);
-			}
+				Store_SellMode(input);
 			break;
 
 		case 'u':
 		case 'U':
 		case 'i':
 		case 'I':
-			*infoWindowType = input;
-			Character_Info_Window(*infoWindowType, dungeonStage);	// U, I 눌렀을때 바꾸도록
+			infoWindowType = input;
+			Character_Info_Window(infoWindowType, dungeonStage);	// U, I 눌렀을때 바꾸도록
 			break;
 
 		case 'r':
@@ -1272,8 +946,7 @@ void Game::Store_Process(int dungeonStage,int* infoWindowType)
 			FLAG_using_store = false;
 			Remove_GameProcess_Window();
 			break;
-		case 'n':	// 테스트용
-			break;
+
 		case SPACE_BAR : // 테스트용
 			My_Character.SetGold(500000);
 			break;
@@ -1347,7 +1020,7 @@ void Game::Store_Screen(int dungeonStage)
 		break;
 	}
 }
-void Game::Store_Buy_Mode(int dungeonStage,int input)	// 상점에서 구매모드일때
+void Game::Store_BuyMode(int dungeonStage,int input)	// 상점에서 구매모드일때
 {
 	switch (dungeonStage)
 	{
@@ -1355,16 +1028,16 @@ void Game::Store_Buy_Mode(int dungeonStage,int input)	// 상점에서 구매모드일때
 		switch (input)
 		{
 		case '1':
-			My_Character.inventory.BuyItem(new Equipment("초심자의 대검", 200, 10), &My_Character);
+			My_Character.inventory.BuyItem(new Equipment("초심자의 대검", 200, 10));
 			break;
 		case '2':
-			My_Character.inventory.BuyItem(new Equipment("초심자의 죽창", 500, 20), &My_Character);
+			My_Character.inventory.BuyItem(new Equipment("초심자의 죽창", 500, 20));
 			break;
 		case '3':
-			My_Character.inventory.BuyItem(new Potion("빨간포션", 30, 0, 30, 1), &My_Character);
+			My_Character.inventory.BuyItem(new Potion("빨간포션", 30, 0, 30, 1));
 			break;
 		case '4':
-			My_Character.inventory.BuyItem(new Potion("파란포션", 0, 30, 50, 1), &My_Character);
+			My_Character.inventory.BuyItem(new Potion("파란포션", 0, 30, 50, 1));
 			break;
 		case '5':
 			break;
@@ -1382,16 +1055,16 @@ void Game::Store_Buy_Mode(int dungeonStage,int input)	// 상점에서 구매모드일때
 		switch (input)
 		{
 		case '1':
-			My_Character.inventory.BuyItem(new Equipment("중급자의 대검", 1200, 40), &My_Character);
+			My_Character.inventory.BuyItem(new Equipment("중급자의 대검", 1200, 40));
 			break;
 		case '2':
-			My_Character.inventory.BuyItem(new Equipment("중급자의 죽창", 2000, 55), &My_Character);
+			My_Character.inventory.BuyItem(new Equipment("중급자의 죽창", 2000, 55));
 			break;
 		case '3':
-			My_Character.inventory.BuyItem(new Potion("주황포션", 70, 0, 50, 1), &My_Character);
+			My_Character.inventory.BuyItem(new Potion("주황포션", 70, 0, 50, 1));
 			break;
 		case '4':
-			My_Character.inventory.BuyItem(new Potion("남색포션", 0, 80, 70, 1), &My_Character);
+			My_Character.inventory.BuyItem(new Potion("남색포션", 0, 80, 70, 1));
 			break;
 		case '5':
 			break;
@@ -1428,237 +1101,22 @@ void Game::Store_Buy_Mode(int dungeonStage,int input)	// 상점에서 구매모드일때
 			break;
 		}
 		break;
-	case 4:	// 던전 4층
-		switch (input)
-		{
-		case '1':
-			break;
-		case '2':
-			break;
-		case '3':
-			break;
-		case '4':
-			break;
-		case '5':
-			break;
-		case '6':
-			break;
-		case '7':
-			break;
-		case '8':
-			break;
-		case '9':
-			break;
-		}
-		break;
-	case 5:	// 던전 5층
-		switch (input)
-		{
-		case '1':
-			break;
-		case '2':
-			break;
-		case '3':
-			break;
-		case '4':
-			break;
-		case '5':
-			break;
-		case '6':
-			break;
-		case '7':
-			break;
-		case '8':
-			break;
-		case '9':
-			break;
-		}
-		break;
-	case 6:	// 던전 6층
-		switch (input)
-		{
-		case '1':
-			break;
-		case '2':
-			break;
-		case '3':
-			break;
-		case '4':
-			break;
-		case '5':
-			break;
-		case '6':
-			break;
-		case '7':
-			break;
-		case '8':
-			break;
-		case '9':
-			break;
-		}
-		break;
-	case 7:	// 던전 7층
-		switch (input)
-		{
-		case '1':
-			break;
-		case '2':
-			break;
-		case '3':
-			break;
-		case '4':
-			break;
-		case '5':
-			break;
-		case '6':
-			break;
-		case '7':
-			break;
-		case '8':
-			break;
-		case '9':
-			break;
-		}
-		break;
-	case 8:	// 던전 8층
-		switch (input)
-		{
-		case '1':
-			break;
-		case '2':
-			break;
-		case '3':
-			break;
-		case '4':
-			break;
-		case '5':
-			break;
-		case '6':
-			break;
-		case '7':
-			break;
-		case '8':
-			break;
-		case '9':
-			break;
-		}
-		break;
-	case 9:	// 던전 9층
-		switch (input)
-		{
-		case '1':
-			break;
-		case '2':
-			break;
-		case '3':
-			break;
-		case '4':
-			break;
-		case '5':
-			break;
-		case '6':
-			break;
-		case '7':
-			break;
-		case '8':
-			break;
-		case '9':
-			break;
-		}
-		break;
-	case 10:	// 던전 10층
-		switch (input)
-		{
-		case '1':
-			break;
-		case '2':
-			break;
-		case '3':
-			break;
-		case '4':
-			break;
-		case '5':
-			break;
-		case '6':
-			break;
-		case '7':
-			break;
-		case '8':
-			break;
-		case '9':
-			break;
-		}
-		break;
-	default:
-		switch (input)
-		{
-		case '1':
-			break;
-		case '2':
-			break;
-		case '3':
-			break;
-		case '4':
-			break;
-		case '5':
-			break;
-		case '6':
-			break;
-		case '7':
-			break;
-		case '8':
-			break;
-		case '9':
-			break;
-		}
-		break;
 	}
 }
-void Game::Store_Sell_Mode(int input)	// 상점에서 판매모드일때
+void Game::Store_SellMode(int input)	// 상점에서 판매모드일때
 {
 	int index;
 	index = input - 48 - 1;	// 아스키 -48, 인덱스 -1
 	//setcolor(BLACK, WHITE);	// 상점 디버그용 // 테스트
 	//gotoxy(48, 59); cout << "입력숫자 : " << (char)input;
 	//setcolor(WHITE, BLACK);
-	switch (index)
-	{
-	case 0:
-		My_Character.inventory.Sell_Items(index);
-		break;
-	case 1:
-		My_Character.inventory.Sell_Items(index);
-		break;
-	case 2:
-		My_Character.inventory.Sell_Items(index);
-		break;
-	case 3:
-		My_Character.inventory.Sell_Items(index);
-		break;
-	case 4:
-		My_Character.inventory.Sell_Items(index);
-		break;
-	case 5:
-		My_Character.inventory.Sell_Items(index);
-		break;
-	case 6:
-		My_Character.inventory.Sell_Items(index);
-		break;
-	case 7:
-		My_Character.inventory.Sell_Items(index);
-		break;
-	case 8:		// '9' - 48 - 1 = 8; // 최대 숫자 ('1' ~ '9')
-		My_Character.inventory.Sell_Items(index);
-		break;
-	
-	default:
 
-		break;
-	}
+	My_Character.inventory.Sell_Items(index);
+
 }
 
 // 몬스터 전투관련
-void Game::Battle_Process(int dungeonStage, int *infoWindowType)
+void Game::Battle_Process(int dungeonStage, int &infoWindowType)
 {
 	Monster monster("noname", 0, 0, 0, 0, 0);
 
@@ -1673,10 +1131,12 @@ void Game::Battle_Process(int dungeonStage, int *infoWindowType)
 	FLAG_infoWindowUpdate = true;
 	Battle_log_row = MIN_BATTLE_LOG_ROW;			// 전투 시작시 로그 시작은 27행으로 맞춰놓기 
 
-	thread t1(Game::Thread_InBattle,ref(m));
+	thread t1(Game::Thread_InBattle, ref(m));
+	int testnum = 0;
 	while (FLAG_playing_battle)
 	{
 		m.lock();
+		Control_BattleLog();		// 배틀로그 행 조절
 		if (monster_attack_turn)	// 몬스터 공격턴이면 공격하고 정보업뎃
 		{
 			monster_attack_turn = false;
@@ -1688,16 +1148,20 @@ void Game::Battle_Process(int dungeonStage, int *infoWindowType)
 			FLAG_infoWindowUpdate = false;
 			Remove_Inventory_In_Battle();
 
-			Character_Info_Window(*infoWindowType, dungeonStage);
+			Character_Info_Window(infoWindowType, dungeonStage);
 			monster.ShowMonsterInfo();
+			//gotoxy(50, 30); cout << "캐릭정보수정, " << testnum++;
 		}
 
 		if (My_Character.GetCurrentHP() <= 0)
 		{
+			FLAG_playing_battle = false;
+			Game::Remove_At_Battle_End();	// 누르면 화면지우고 진행
+			Game::Make_Map_Dungeon(dungeonStage);	// ※순서주의※ 죽었으니 맵을 업뎃함
 			m.unlock();
 			break;
 		}
-		Control_BattleLog();		// 배틀로그 행 조절
+		
 		m.unlock();
 
 		input = Avoid_Garbage_getch();
@@ -1716,7 +1180,7 @@ void Game::Battle_Process(int dungeonStage, int *infoWindowType)
 			break;
 
 		case '3':					// 아이템 사용
-			if (Battle_Use_Item())		// 0 리턴은 행동을 취하지 않음(턴소모X)
+			if (Battle_UseItem())		// 0 리턴은 행동을 취하지 않음(턴소모X)
 				monster_attack_turn = true;
 			break;
 
@@ -1734,8 +1198,8 @@ void Game::Battle_Process(int dungeonStage, int *infoWindowType)
 		case 'I':
 		case 'U':
 		case 'u':
-			*infoWindowType = input;
-			Character_Info_Window(*infoWindowType, dungeonStage);
+			infoWindowType = input;
+			Character_Info_Window(infoWindowType, dungeonStage);
 			break;
 
 		//case SPACE_BAR:
@@ -1840,40 +1304,36 @@ void Game::Battle_Screen(Monster* monster)
 	gotoxy(2, row1++);	cout << "---------------------";gotoxy(23, row2++); cout << "|";
 	setcolor(WHITE, BLACK);
 }
-
 void Game::Thread_InBattle(mutex& m)
 {
-	int row;
-	int column;
-
-	row = 29;
-	column = 30;
+	int row = 29;
+	int column = 28;
 	while (FLAG_playing_battle)
 	{
 		m.lock();
-		gotoxy(30, 29); cout << "                  ";
+		setcolor(YELLOW, BLACK);
+		gotoxy(28, 29); cout << "                      "; //48
 		gotoxy(column, row); cout << "=";
 
 		if (FLAG_Monster_Observation)
 		{
-			gotoxy(30, 29 + 7); cout << "                  ";
+			gotoxy(28, 29 + 7); cout << "                      ";
 			gotoxy(column, row + 7); cout << "=";
-
 		}
 		else
 		{
-			gotoxy(30, 29 + 5); cout << "                  ";
-			gotoxy(77 - column, row + 5); cout << "=";
+			gotoxy(28, 29 + 5); cout << "                      ";
+			gotoxy(77 - column, row + 5); cout << "="; // 75 -28 45 51
 		}
+		setcolor(WHITE, BLACK);
 		m.unlock();
 
-		Sleep(200);
-		if (column < 47) column++;
-		else column = 30;
+		Sleep(150);
+		if (column < 48) column++;
+		else column = 28;
 	}
 
 }
-
 
 void Game::Battle_RunAway()
 {
@@ -1903,7 +1363,7 @@ void Game::Battle_ObservMonster()
 	setcolor(LIGHTCYAN, BLACK); cout << "관찰하기";
 	setcolor(WHITE, BLACK);	 cout << "를 했습니다.";
 }
-bool Game::Battle_Use_Item()
+bool Game::Battle_UseItem()
 {
 	Remove_Inventory_In_Battle();	// 인벤토리쪽 프린트 지우는코드
 	My_Character.inventory.ShowInventory_In_Battle(); // 프린트 위치조정

@@ -9,41 +9,38 @@ Inventory::Inventory()
 {
 	slots.reserve(sizeof(Item*)*10);
 }
-void Inventory::BuyItem(Item* item,Unit* unit)
+void Inventory::BuyItem(Item* item)
 {
-
-	int noOverlap = 1;
+	bool overlap = false;
 
 	if (slots.size() < MAX_INVENTORY_SIZE)
 	{
-		if (unit->GetGold() - item->GetPrice() < 0)	// 아이템 구매 실패 (돈이 없을때) 
+		if (My_Character.GetGold() - item->GetPrice() < 0)	// 아이템 구매 실패 (돈이 없을때) 
 		{
-			setcolor(BLACK, WHITE);					// 출력 위치지정, 색지정
+			setcolor(BLACK, WHITE);							// 출력 위치지정, 색지정
 			gotoxy(48, 65); cout << "\"" << item->GetName() << "\" 을(를) 구매할 돈이 부족합니다.";
 			setcolor(WHITE, BLACK);
 			cout << "        ";
 		}
-		else										// 아이템 구매 성공 (돈이 충분히 있을때)
+		else												// 아이템 구매 성공 (돈이 충분히 있을때)
 		{
-			if (item->IsEquipment() == 0)			// 구매한 아이템이 소비템 일때만
+			if (item->GetItemType() == static_cast<int>(ItemType::Potion))	// 구매한 아이템이 포션일 때
 			{
-				for (int i = 0; i < slots.size(); i++)			// 인벤에 중복템 있으면 개수 늘리기
+				for (int i = 0; i < slots.size(); i++)		// 인벤에 중복템 있으면 개수 늘리기
 				{
 					if (item->GetName() == slots[i]->GetName())
 					{
+						overlap = true;
 						slots[i]->SetCount(item->GetCount() + slots[i]->GetCount());
-						noOverlap = 0;
 						break;
 					}
 				}
 			}
 
-			if (noOverlap == 1)	// 인벤에 중복템 없으면 새로 아이템 추가
-			{
+			if (!overlap)	// 인벤에 중복템 없으면 새로 아이템 추가
 				slots.push_back(item);
-			}
-
-			unit->SetGold(unit->GetGold() - item->GetPrice());	// 구매했으면 돈을 내야지 
+			
+			My_Character.SetGold(My_Character.GetGold() - item->GetPrice());	// 돈 지불
 		}
 	}
 	else	// 인벤최대개수 초과시
@@ -60,27 +57,24 @@ bool Inventory::UseItem(int input)
 	int index = input - 48 - 1;		// 아스키값 -48, 인덱스값 -1
 
 	if (slots.size() > index)
-	{
-
-		if (slots[index]->IsEquipment() == 0)	// Potion 일때
+	{	
+		if (slots[index]->GetItemType() == static_cast<int>(ItemType::Potion))	// Potion 일때
 		{
-			slots[index]->UseItem();
 			Game::Control_BattleLog();
-			// Battle_log_row
+			slots[index]->UseItem();
+			
 			gotoxy(72, Battle_log_row += 2); cout << "▣ ";
 			setcolor(GREEN, BLACK);	cout << My_Character.GetName();
 			setcolor(WHITE, BLACK); cout << "은(는) ";
 			setcolor(LIGHTBLUE, BLACK); cout << slots[index]->GetName();
 			setcolor(WHITE, BLACK);	 cout << "사용했습니다.";
-			// Battle_log_row
 		}
-		else if (slots[index]->IsEquipment() == 1)	// 장비 일때
+		else if (slots[index]->GetItemType() == static_cast<int>(ItemType::Equipment))	// 장비 일때
 		{
+			
 			for (int i = 0; i < slots.size(); i++)
-			{
 				slots[i]->SetIsUse(0);	// 모든 장비 -> 해제
-			}
-			// Battle_log_row
+			
 			Game::Control_BattleLog();
 			slots[index]->SetIsUse(1);	// 이 장비만 장착
 			slots[index]->UseItem();
@@ -89,13 +83,11 @@ bool Inventory::UseItem(int input)
 			setcolor(WHITE, BLACK); cout << "은(는) ";
 			setcolor(LIGHTBLUE, BLACK); cout << slots[index]->GetName();
 			setcolor(WHITE, BLACK);	 cout << "장착했습니다.";
-			// Battle_log_row
 		}
 
 		if (slots[index]->GetCount() <= 0)		// 0개되면 인벤토리에서 지우기 
-		{
 			slots.erase(slots.begin() + index);
-		}
+		
 		return true;
 	}
 	return false;
@@ -118,9 +110,6 @@ void Inventory::Sell_Items(int index)
 			}
 		}
 	}
-	//setcolor(BLACK, WHITE);	// 상점 디버그용 // 테스트
-	//gotoxy(48, 60); cout << "판매할 index : " << index;
-	//setcolor(WHITE, BLACK);
 }
 void Inventory::ShowInventory()
 {
@@ -130,7 +119,7 @@ void Inventory::ShowInventory()
 	gotoxy(73, 5); cout << "-------------------------------------";
 	for (int i = 0; i < invenSize; i++)
 	{
-		gotoxy(71, 6+i);	cout << i + 1 << ".";
+		gotoxy(71, 6+i); cout << i + 1 << ".";
 		gotoxy(73, 6+i); slots[i]->ShowInfo();
 	}
 	
