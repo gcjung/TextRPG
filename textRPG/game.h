@@ -22,7 +22,6 @@ constexpr int MAX_STAGE10_MONSTER_NUM = 100;
 class Game
 {
 public:
-	Game();
 	static string Class_ItoS(char chractor_class);
 	
 	// 게임 전
@@ -34,7 +33,7 @@ public:
 	
 	// 게임 중
 	static int Playing_Game_State();
-	static int Playing_Game_Screen();
+	static int Playing_Game_Process();
 	static void Playing_Game_Frame();
 
 	// 맵 관련 함수

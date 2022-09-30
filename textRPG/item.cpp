@@ -1,7 +1,7 @@
 #include "main.h"
 
 
-extern Character My_Character;
+extern Character MyCharacter;
 
 
 //=====================================================
@@ -103,7 +103,7 @@ void Equipment::SetIsUse(int isuse)
 
 void Equipment::UseItem()
 {
-	My_Character.SetAddAtt(this->att);
+	MyCharacter.SetAddAtt(this->att);
 }
 void Equipment::ShowInfo()
 {
@@ -192,23 +192,23 @@ void Potion::UseItem()
 	SetCount(GetCount() - 1);	// 1개줄이기 (개수가 여러개면 1개 줄이기)
 
 	// HP 회복
-	if ((My_Character.GetCurrentHP() + this->hp) > My_Character.GetMaxHP()) // HP회복했을때 MaxMP보다 클때
+	if ((MyCharacter.GetCurrentHP() + this->hp) > MyCharacter.GetMaxHP()) // HP회복했을때 MaxMP보다 클때
 	{
-		My_Character.SetCurrentHP(My_Character.GetMaxHP());
+		MyCharacter.SetCurrentHP(MyCharacter.GetMaxHP());
 	}
 	else	// HP회복했을때 Max보다 작을때
 	{
-		My_Character.SetCurrentHP(My_Character.GetCurrentHP() + this->hp);
+		MyCharacter.SetCurrentHP(MyCharacter.GetCurrentHP() + this->hp);
 	}
 
 	// MP 회복
-	if (My_Character.GetCurrentMP() + this->mp > My_Character.GetMaxMP()) // MP회복했을때 MaxMP보다 클때
+	if (MyCharacter.GetCurrentMP() + this->mp > MyCharacter.GetMaxMP()) // MP회복했을때 MaxMP보다 클때
 	{
-		My_Character.SetCurrentMP(My_Character.GetMaxMP());
+		MyCharacter.SetCurrentMP(MyCharacter.GetMaxMP());
 	}
 	else	// MP회복했을때 Max보다 작을때
 	{
-		My_Character.SetCurrentMP(My_Character.GetCurrentMP() + this->mp);
+		MyCharacter.SetCurrentMP(MyCharacter.GetCurrentMP() + this->mp);
 	}
 
 }

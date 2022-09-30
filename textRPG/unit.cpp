@@ -3,13 +3,13 @@
 
 
 
-extern char tempMap[27][68];
+extern char TempMap[27][68];
 extern bool FLAG_mapUpdate;
 extern bool FLAG_infoWindowUpdate;
 extern bool FLAG_Monster_Observation;
 extern bool FLAG_playing_battle;
 extern int Battle_log_row;
-extern Character My_Character;
+extern Character MyCharacter;
 
 //=======================================================
 // Unit Class 함수 정의
@@ -31,7 +31,7 @@ Unit::Position::Position() : x(1), y(1)
 
 void Unit::Position::Move(int inputX,int inputY,int &dungeonStage,int &infoWindowType)	// 이동 및 오브젝트 상호작용
 {
-	char mapObject = tempMap[this->y + inputY - 1][this->x + inputX - 2]; // 미리 이동할 곳의 오브젝트
+	char mapObject = TempMap[this->y + inputY - 1][this->x + inputX - 2]; // 미리 이동할 곳의 오브젝트
 
 	if (mapObject == '0')		// 빈 칸
 	{
@@ -47,14 +47,14 @@ void Unit::Position::Move(int inputX,int inputY,int &dungeonStage,int &infoWindo
 		this->x += inputX;
 		this->y += inputY;
 	}
-	else if (mapObject == 's')	// 상점
+	else if (mapObject == '#')	// 상점
 	{
 		Game::Store_Process(dungeonStage, infoWindowType);
 	}
 	else if (mapObject == 'm')	// 몬스터
 	{
 		Game::Battle_Process(dungeonStage, infoWindowType);
-		tempMap[this->y + inputY - 1][this->x + inputX - 2] = '0';	// 몬스터 전투 후 빈곳으로 만들어주기
+		TempMap[this->y + inputY - 1][this->x + inputX - 2] = '0';	// 몬스터 전투 후 빈곳으로 만들어주기
 	}
 	else if (mapObject == 'd')	// 목적지
 	{
@@ -215,7 +215,7 @@ void Character::Attack(Monster* monster)
 
 		//setcolor(GREEN, BLACK);	cout << My_Character.GetName();
 		gotoxy(72, Battle_log_row += 2); cout << "▣ ";
-		setcolor(GREEN, BLACK);	cout << My_Character.GetName();
+		setcolor(GREEN, BLACK);	cout << MyCharacter.GetName();
 		setcolor(WHITE, BLACK);	cout << " 공격-> ";
 		setcolor(RED, BLACK);	cout << monster->GetName();
 		setcolor(WHITE, BLACK);	cout << "을 처치했습니다.";
@@ -230,7 +230,7 @@ void Character::Attack(Monster* monster)
 		monster->SetCurrentHP(monster->GetCurrentHP() - damage);
 		
 		gotoxy(72, Battle_log_row += 2); cout << "▣ ";
-		setcolor(GREEN, BLACK);	cout << My_Character.GetName();
+		setcolor(GREEN, BLACK);	cout << MyCharacter.GetName();
 		setcolor(WHITE, BLACK);	cout << " 공격-> ";
 		setcolor(RED, BLACK);	cout << monster->GetName();
 		setcolor(WHITE, BLACK); cout << "은(는) ";
@@ -429,18 +429,18 @@ void Monster::Attack(Character* character,int dungeonStage)
 }
 void Monster::Dead()
 {
-	My_Character.SetGold(this->GetGold() + My_Character.GetGold());			// 돈 획득
+	MyCharacter.SetGold(this->GetGold() + MyCharacter.GetGold());			// 돈 획득
 
-	if (My_Character.GetCurrentExp() + this->GetExp() >= My_Character.GetMaxExp()) // 레벨업해야됨
+	if (MyCharacter.GetCurrentExp() + this->GetExp() >= MyCharacter.GetMaxExp()) // 레벨업해야됨
 	{
-		My_Character.SetCurrentExp(0);					// 현재 경험치는 0
-		My_Character.SetLV(My_Character.GetLV() + 1);	// LV 업
-		My_Character.SetMaxExp(My_Character.GetMaxExp() + My_Character.GetMaxExp() / 25);	// 최대겸치 20%증가
-		My_Character.SetMaxHP(My_Character.GetMaxHP() + (My_Character.GetMaxHP() / 15));
-		My_Character.SetMaxMP(My_Character.GetMaxMP() + (My_Character.GetMaxMP() / 15));
+		MyCharacter.SetCurrentExp(0);					// 현재 경험치는 0
+		MyCharacter.SetLV(MyCharacter.GetLV() + 1);	// LV 업
+		MyCharacter.SetMaxExp(MyCharacter.GetMaxExp() + MyCharacter.GetMaxExp() / 25);	// 최대겸치 20%증가
+		MyCharacter.SetMaxHP(MyCharacter.GetMaxHP() + (MyCharacter.GetMaxHP() / 15));
+		MyCharacter.SetMaxMP(MyCharacter.GetMaxMP() + (MyCharacter.GetMaxMP() / 15));
 	}
 	else
 	{
-		My_Character.SetCurrentExp(My_Character.GetCurrentExp() + this->GetExp());
+		MyCharacter.SetCurrentExp(MyCharacter.GetCurrentExp() + this->GetExp());
 	}
 }

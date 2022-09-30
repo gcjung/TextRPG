@@ -1,8 +1,8 @@
 #include "main.h"
 
 
-Character My_Character;
-char tempMap[27][68];
+Character MyCharacter;
+char TempMap[27][68];
 mutex m;	// gotoxy로 커서위치가 겹쳐지는 걸 방지
 
 int main()
@@ -16,11 +16,7 @@ int main()
 		switch (game_state)
 		{
 		case INTIAL_GAME_STATE:
-			game_state = Game::Initial_Game_State();	// 시작화면
-			break;
-
-		case GAME_PLAYING_STATE:
-			game_state = Game::Playing_Game_State();	// 게임화면
+			game_state = Game::Initial_Game_State();	// 게임 전 프로세스
 			break;
 
 		case GAME_EXIT:			// 게임종료

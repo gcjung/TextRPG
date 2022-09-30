@@ -2,7 +2,7 @@
 
 
 
-extern Character My_Character;
+extern Character MyCharacter;
 extern int Battle_log_row;
 
 Inventory::Inventory()
@@ -15,7 +15,7 @@ void Inventory::BuyItem(Item* item)
 
 	if (slots.size() < MAX_INVENTORY_SIZE)
 	{
-		if (My_Character.GetGold() - item->GetPrice() < 0)	// 아이템 구매 실패 (돈이 없을때) 
+		if (MyCharacter.GetGold() - item->GetPrice() < 0)	// 아이템 구매 실패 (돈이 없을때) 
 		{
 			setcolor(BLACK, WHITE);							// 출력 위치지정, 색지정
 			gotoxy(48, 65); cout << "\"" << item->GetName() << "\" 을(를) 구매할 돈이 부족합니다.";
@@ -40,7 +40,7 @@ void Inventory::BuyItem(Item* item)
 			if (!overlap)	// 인벤에 중복템 없으면 새로 아이템 추가
 				slots.push_back(item);
 			
-			My_Character.SetGold(My_Character.GetGold() - item->GetPrice());	// 돈 지불
+			MyCharacter.SetGold(MyCharacter.GetGold() - item->GetPrice());	// 돈 지불
 		}
 	}
 	else	// 인벤최대개수 초과시
@@ -64,7 +64,7 @@ bool Inventory::UseItem(int input)
 			slots[index]->UseItem();
 			
 			gotoxy(72, Battle_log_row += 2); cout << "▣ ";
-			setcolor(GREEN, BLACK);	cout << My_Character.GetName();
+			setcolor(GREEN, BLACK);	cout << MyCharacter.GetName();
 			setcolor(WHITE, BLACK); cout << "은(는) ";
 			setcolor(LIGHTBLUE, BLACK); cout << slots[index]->GetName();
 			setcolor(WHITE, BLACK);	 cout << "사용했습니다.";
@@ -79,7 +79,7 @@ bool Inventory::UseItem(int input)
 			slots[index]->SetIsUse(1);	// 이 장비만 장착
 			slots[index]->UseItem();
 			gotoxy(72, Battle_log_row += 2); cout << "▣ ";
-			setcolor(GREEN, BLACK);	cout << My_Character.GetName();
+			setcolor(GREEN, BLACK);	cout << MyCharacter.GetName();
 			setcolor(WHITE, BLACK); cout << "은(는) ";
 			setcolor(LIGHTBLUE, BLACK); cout << slots[index]->GetName();
 			setcolor(WHITE, BLACK);	 cout << "장착했습니다.";
@@ -101,7 +101,7 @@ void Inventory::Sell_Items(int index)
 			// 1개판매 (개수가 여러개면 1개 줄이기)
 			slots[index]->SetCount(slots[index]->GetCount() - 1);
 			// 판매 후 돈받기 
-			My_Character.SetGold(My_Character.GetGold() + (slots[index]->GetPrice() / 2));
+			MyCharacter.SetGold(MyCharacter.GetGold() + (slots[index]->GetPrice() / 2));
 			// 0개되면 인벤토리에서 지우기 
 			if (slots[index]->GetCount() <= 0)
 			{
