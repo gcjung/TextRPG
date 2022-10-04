@@ -12,23 +12,22 @@ Inventory::Inventory()
 void Inventory::BuyItem(Item* item)
 {
 	bool overlap = false;
-
-	if (slots.size() < MAX_INVENTORY_SIZE)
+	if (slots.size() < MAX_INVENTORY_SIZE)		// 인벤토리 공간이 있을 때
 	{
 		if (MyCharacter.GetGold() - item->GetPrice() < 0)	// 아이템 구매 실패 (돈이 없을때) 
 		{
-			setcolor(BLACK, WHITE);							// 출력 위치지정, 색지정
-			gotoxy(48, 65); cout << "\"" << item->GetName() << "\" 을(를) 구매할 돈이 부족합니다.";
-			setcolor(WHITE, BLACK);
-			cout << "        ";
+			setcolor(BLACK, BLACK);	gotoxy(48, 65);
+			cout << "                                                 ";
+			setcolor(LIGHTCYAN, BLACK);	gotoxy(48, 65);
+			cout << "\"" << item->GetName() << "\" 을(를) 구매할 돈이 부족합니다.";
 		}
 		else												// 아이템 구매 성공 (돈이 충분히 있을때)
 		{
 			if (item->GetItemType() == static_cast<int>(ItemType::Potion))	// 구매한 아이템이 포션일 때
 			{
-				for (int i = 0; i < slots.size(); i++)		// 인벤에 중복템 있으면 개수 늘리기
+				for (int i = 0; i < slots.size(); i++)		
 				{
-					if (item->GetName() == slots[i]->GetName())
+					if (item->GetName() == slots[i]->GetName())			// 이미 갖고 있는지 확인
 					{
 						overlap = true;
 						slots[i]->SetCount(item->GetCount() + slots[i]->GetCount());
@@ -37,18 +36,16 @@ void Inventory::BuyItem(Item* item)
 				}
 			}
 
-			if (!overlap)	// 인벤에 중복템 없으면 새로 아이템 추가
+			if (!overlap)	// 인벤토리에 템이 없다면 아이템 추가
 				slots.push_back(item);
 			
 			MyCharacter.SetGold(MyCharacter.GetGold() - item->GetPrice());	// 돈 지불
 		}
 	}
-	else	// 인벤최대개수 초과시
+	else	// 인벤 최대 개수 초과시
 	{
-		setcolor(BLACK, WHITE);	// 출력 위치지정, 색지정
-		gotoxy(48, 65); cout << "   인벤토리 공간이 부족합니다   ";
-		setcolor(WHITE, BLACK);
-		cout << "                                         ";
+		setcolor(BLACK, BLACK); gotoxy(48, 65); cout << "                                                 ";
+		setcolor(LIGHTBLUE, BLACK); gotoxy(56, 65); cout << "인벤토리 공간이 부족합니다";
 	}
 }
 bool Inventory::UseItem(int input)

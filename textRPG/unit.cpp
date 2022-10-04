@@ -36,13 +36,12 @@ void Unit::Position::Move(int inputX,int inputY,int &dungeonStage,int &infoWindo
 	if (mapObject == '0')		// 빈 칸
 	{
 		setcolor(WHITE, BLACK);
-		gotoxy(this->x, this->y);
+		gotoxy(this->x, this->y);		// 움직이기 전 공백으로 만들어줌
 		cout << " ";
 
 		setcolor(YELLOW, BLACK);
 		gotoxy(this->x + inputX, this->y + inputY);
-		cout << "@";
-		setcolor(WHITE, BLACK);
+		cout << "@";					// 움직인 후 캐릭터표시 해줌
 
 		this->x += inputX;
 		this->y += inputY;
@@ -58,14 +57,13 @@ void Unit::Position::Move(int inputX,int inputY,int &dungeonStage,int &infoWindo
 	}
 	else if (mapObject == 'd')	// 목적지
 	{
-		// (* dungeonStage)++; << 나중사용할예정
-		dungeonStage = (dungeonStage % 3) + 1;	// 테스트, 
-		FLAG_mapUpdate = true;			// 다음 던전입장시, 맵업데이트
+		dungeonStage = (dungeonStage % 3) + 1;	// 3스테이지까지 존재 
+		FLAG_mapUpdate = true;			// 다음 던전입장시, 맵 업데이트
 		FLAG_infoWindowUpdate = true;	// 다음 던전입장시, 정보창에 던전정보를 업뎃하기위함
 	}
 
 }
-
+// (* dungeonStage)++; << 나중사용할예정
 // Getter 함수
 inline string Unit::GetName() const
 {
@@ -143,8 +141,8 @@ Character::Character() : characterClass(0), maxExp(100), currentExp(0), maxMP(10
 {
 
 }
-Character::Character(int Character_Class, int MaxExp, int CurrentExp, int MaxMp, int CurrentMP)
-	: characterClass(Character_Class), maxExp(MaxExp), currentExp(CurrentExp), maxMP(MaxMp), currentMP(CurrentMP)
+Character::Character(int characterClass, int maxExp, int currentExp, int maxMp, int currentMP)
+	: characterClass(characterClass), maxExp(maxExp), currentExp(currentExp), maxMP(maxMp), currentMP(currentMP)
 {
 
 }

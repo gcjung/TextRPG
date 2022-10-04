@@ -9,7 +9,7 @@ int Battle_log_row = MIN_BATTLE_LOG_ROW;
 
 bool FLAG_mapUpdate = false;		// true - 맵을 업데이트 해라
 bool FLAG_infoWindowUpdate = false; // true - 캐릭터 정보창 업데이트 해라
-bool FLAG_using_store = false;		// true - 현재 상점을 이용중이다
+//bool FLAG_using_store = false;		// true - 현재 상점을 이용중이다
 bool FLAG_playing_battle = false;	// true - 현재 몬스터와 전투중이다
 bool FLAG_Monster_Observation = false; // true - 관찰하기를 이용한 몬스터 추가정보를 보는 중이다.
 
@@ -35,27 +35,27 @@ string Game::Class_ItoS(char chractor_class)			// int값을 받고 string으로 반환
 //=====================================================
 int Game::Initial_Game_State()					
 {
-	int game_state = INIT_GAME;
+	int gameState = INIT_GAME;
 	while (1) {
-		switch (game_state)
+		switch (gameState)
 		{
 		case INIT_GAME:
-			game_state = Init_Screen();		// 시작 화면
+			gameState = Init_Screen();		// 시작 화면
 			break;
 
 		case NEW_GAME_START:				// 캐릭터 생성화면으로
-			game_state = Character_Create_Screen();
+			gameState = Character_Create_Screen();
 			break;
 
 		case CONTINUE_GAME_START:			
 			//break;
 
 		case GAME_INFO:
-			game_state = GameInfo_Screen();
+			gameState = GameInfo_Screen();
 			break;
 
 		case GAME_PLAYING_STATE:			// 게임 진행State으로 넘어감
-			game_state = Playing_Game_State();
+			gameState = Playing_Game_Process();
 			break;
 
 		case GAME_EXIT:						// 게임 종료
@@ -65,9 +65,9 @@ int Game::Initial_Game_State()
 }
 int Game::Init_Screen()									// 게임 초기 시작시, state에 의한 화면 출력 및 기능
 {
+	setcolor(WHITE, BLACK);
 	system("mode con cols=70 lines=30"); // 나중에 게임진행창의 크기가 변경됐을때 주석을 풀어서 쓸 것.
 	system("cls");
-	setcolor(WHITE, BLACK);
 	cout << "\n";
 	cout << "    ■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■\n";
 	cout << "    ■                                                        ■\n";
@@ -114,13 +114,12 @@ int Game::Init_Screen()									// 게임 초기 시작시, state에 의한 화면 출력 및 �
 
 		default:
 			Set_Color %= MAX_CONSOLE_COLOR_NUM;
-			gotoxy(15, 20); setcolor(Set_Color, WHITE);	// 출력 위치지정, 색지정
+			gotoxy(15, 20); setcolor(Set_Color++, WHITE);	// 출력 위치지정, 색지정
 			if (input >= MAX_ASCII_NUM)	// 아스키값 넘는 한글을 표시			
 				cout << "<한글>을 입력하였습니다. 다시 눌러주세요" << endl;
 			else
 				cout << "< " << input << " >을 입력하였습니다. 다시 눌러주세요 " << endl;
 			setcolor(WHITE, BLACK);
-			Set_Color++;
 			break;
 		}
 		
@@ -293,38 +292,35 @@ void Game::Init_Game_Frame()
 //=====================================================
 // 중 - 전체 화면 및 플레이에 관련된 함수들
 //=====================================================
-int Game::Playing_Game_State()
-{
-	int game_state = PLAYING_GAME;
-	while (1) {
-		switch (game_state)
-		{
-		case PLAYING_GAME:
-			game_state = Playing_Game_Process();
-			break;
-
-		case INTIAL_GAME_STATE:
-			return INTIAL_GAME_STATE;
-		}
-	}
-}
+//int Game::Playing_Game_State()
+//{
+//	int game_state = PLAYING_GAME;
+//	while (1) {
+//		switch (game_state)
+//		{
+//		case PLAYING_GAME:
+//			game_state = Playing_Game_Process();
+//			break;
+//
+//		case INIT_GAME:
+//			return INIT_GAME;
+//		}
+//	}
+//}
 int Game::Playing_Game_Process()
 {
-
-	int Set_Color = BLACK;	 //	BLACK = 0 초기값
+	int setColor = BLACK;	 //	BLACK = 0 초기값
 	int dungeonStage = 1;	 // 던전 '1'단계 초기값
-	int using_infoWindowType = 'U';	// U - 캐릭터상태창, I - 인벤토리창, 초기는 캐릭상태창
+	int usingInfoScreenType = 'U';	// U - 캐릭터상태창, I - 인벤토리창, 초기는 캐릭상태창
 	unsigned char input = 0; // 키입력값 '0' 초기값
 
 	// 처음화면 출력
 	Playing_Game_Frame();
-	Character_Info_Window(using_infoWindowType, dungeonStage);
+	Character_Info_Window(usingInfoScreenType, dungeonStage);
 	Make_Map_Dungeon(dungeonStage);
 
-
 	// 게임 진행 및 키입력 
-	while (1) {
-		
+	while (TRUE) {
 		if (FLAG_mapUpdate)			// 다음 던전으로 진행 시, 맵 업데이트 
 		{
 			FLAG_mapUpdate = false;
@@ -334,62 +330,57 @@ int Game::Playing_Game_Process()
 		if (FLAG_infoWindowUpdate)	// 캐릭 정보창 업데이트(상점이용, 아이템이용시)
 		{
 			FLAG_infoWindowUpdate = false;
-			Character_Info_Window(using_infoWindowType, dungeonStage);
+			Character_Info_Window(usingInfoScreenType, dungeonStage);
 		}
-
-		switch (input = _getch())
+		
+		input = Avoid_Garbage_getch();
+		if ('1' <= input && input <= '9')			// 아이템 사용
 		{
-		case '1':
-		case '2':
-		case '3':
-		case '4':
-		case '5':
-		case '6':
-		case '7':
-		case '8':
-		case '9':
 			FLAG_infoWindowUpdate = true;
-			MyCharacter.inventory.UseItem(input);	// 9번 아이템 사용
-			break;
-		case 'w':
-		case 'W':
-			MyCharacter.pos.Move(0, -1, dungeonStage, using_infoWindowType);
-			break;
-		case 'a':
-		case 'A':
-			MyCharacter.pos.Move(-1, 0, dungeonStage, using_infoWindowType);
-			break;
-		case 's':
-		case 'S':
-			MyCharacter.pos.Move(0, 1, dungeonStage, using_infoWindowType);
-			break;
-		case 'd':
-		case 'D':
-			MyCharacter.pos.Move(1, 0, dungeonStage, using_infoWindowType);
-			break;
+			MyCharacter.inventory.UseItem(input);	
+		}
+		else
+		{
+			switch (input)
+			{
+			case 'w':								// 위로 이동
+			case 'W':
+				MyCharacter.pos.Move(0, -1, dungeonStage, usingInfoScreenType);
+				break;
+			case 'a':								// 좌로 이동
+			case 'A':
+				MyCharacter.pos.Move(-1, 0, dungeonStage, usingInfoScreenType);
+				break;
+			case 's':								// 아래로 이동
+			case 'S':
+				MyCharacter.pos.Move(0, 1, dungeonStage, usingInfoScreenType);
+				break;
+			case 'd':								// 우로 이동
+			case 'D':
+				MyCharacter.pos.Move(1, 0, dungeonStage, usingInfoScreenType);
+				break;
 
-		case 'p':
-		case 'P':
-			return INTIAL_GAME_STATE;	// 시작화면으로 가기
+			case 'i':
+			case 'I':
+			case 'U':
+			case 'u':
+				usingInfoScreenType = input;
+				Character_Info_Window(usingInfoScreenType, dungeonStage);
+				break;
 
-		case 'i':
-		case 'I':
-		case 'U':
-		case 'u':
-			using_infoWindowType = input;
-			Character_Info_Window(using_infoWindowType, dungeonStage);
-			break;
+			case 'p':
+			case 'P':
+				return INIT_GAME;	// 시작화면으로 가기
 
-		default:
-			Set_Color %= MAX_CONSOLE_COLOR_NUM;
-			gotoxy(85, 20); setcolor(Set_Color++, WHITE);	// 출력 위치지정, 색지정
+			default:								// 이상한 값을 입력받았을 때
+				setColor %= MAX_CONSOLE_COLOR_NUM;
+				gotoxy(85, 20); setcolor(setColor++, WHITE);	// 출력 위치지정, 색지정
 
-			if (input >= MAX_ASCII_NUM)	// 아스키값 넘는 한글을 표시			
-				cout << "<한글>을 입력하였습니다. 한/영을 눌러주세요    " << endl;
-			else
-				cout << "< " << input << " >을 입력하였습니다. 다시 눌러주세요   " << endl;
-
-			setcolor(WHITE, BLACK);
+				if (input >= MAX_ASCII_NUM)			// 아스키값 넘는 한글을 표시			
+					cout << "<한글>을 입력하였습니다. 한/영을 눌러주세요    " << endl;
+				else
+					cout << "< " << input << " >을 입력하였습니다. 다시 눌러주세요   " << endl;
+			}
 		}
 
 		if (MyCharacter.GetCurrentHP() <= 0)	// 캐릭터 부활시 처리
@@ -399,6 +390,45 @@ int Game::Playing_Game_Process()
 		}
 	}
 }
+/*
+ 		//else if ('w' == input || 'W' == input)		// 위로 이동
+		//{
+		//	MyCharacter.pos.Move(0, -1, dungeonStage, using_infoWindowType);
+		//}
+		//else if ('a' == input || 'A' == input)		// 좌로 이동
+		//{
+		//	MyCharacter.pos.Move(-1, 0, dungeonStage, using_infoWindowType);
+		//}
+		//else if ('s' == input || 'S' == input)		// 아래로 이동
+		//{
+		//	MyCharacter.pos.Move(0, 1, dungeonStage, using_infoWindowType);
+		//}
+		//else if ('d' == input || 'D' == input)		// 우로 이동
+		//{
+		//	MyCharacter.pos.Move(1, 0, dungeonStage, using_infoWindowType);
+		//}
+		//else if ('p' == input || 'P' == input)		// 시작화면으로 이동
+		//{
+		//	return INTIAL_GAME_STATE;
+		//}
+		//else if ('i' == input || 'I' == input )
+		//{
+		//	using_infoWindowType = input;
+		//	Character_Info_Window(using_infoWindowType, dungeonStage);
+		//}
+		//else
+		//{
+		//	Set_Color %= MAX_CONSOLE_COLOR_NUM;
+		//	gotoxy(85, 20); setcolor(Set_Color++, WHITE);	// 출력 위치지정, 색지정
+
+		//	if (input >= MAX_ASCII_NUM)	// 아스키값 넘는 한글을 표시			
+		//		cout << "<한글>을 입력하였습니다. 한/영을 눌러주세요    " << endl;
+		//	else
+		//		cout << "< " << input << " >을 입력하였습니다. 다시 눌러주세요   " << endl;
+
+		//	setcolor(WHITE, BLACK);
+		//}
+*/
 void Game::Playing_Game_Frame()		// 전체 틀
 {
 	system("mode con cols=140 lines=70"); // 나중에 게임진행창의 크기가 변경됐을때 주석을 풀어서 쓸 것.
@@ -465,7 +495,7 @@ void Game::Make_Map_Dungeon(int dungeonStage)
 	char map2[27][68] = {
 		{"1111111111111111111111111111111111111111111111111111111111111111111"},
 		{"1000000000000000000000011100000000000000000000000000000111100000001"},
-		{"100000000000000000000001110000000s000000000000000000000111100000001"},
+		{"100000000000000000000001110000000#000000000000000000000111100000001"},
 		{"100c011000000111000000011100000000000000000000000000000111100000dd1"},	// c = character
 		{"1000011000000111000000011100000000000000000000000000000111100000dd1"},
 		{"1000011000000111000000011100000000000000000000000000000111100000dd1"},
@@ -485,7 +515,7 @@ void Game::Make_Map_Dungeon(int dungeonStage)
 		{"1000011000011111111111111100000001111000000000000011111110000000001"},
 		{"1000011000000000000111000000000001111000000000000000011110000000001"},
 		{"1000011000000000000111000000000001111000000111000000000000000000001"},
-		{"1000011000000000s00000000000000001111000000111000000000000000000001"},	// s = store
+		{"1000011000000000#00000000000000001111000000111000000000000000000001"},	// s = store
 		{"1000011000000000000000000000000001111000000000000000000000000000001"},
 		{"1000000000000000000000000000000001111000000000000000000000000000001"},
 		{"1000000000000000000000000000000001111000000000000000000000000000001"},
@@ -495,9 +525,9 @@ void Game::Make_Map_Dungeon(int dungeonStage)
 		{"1111111111111111111111111111111111111111111111111111111111111111111"},
 		{"1000000000000111100000000000000000001111000000000000000000000000001"},
 		{"100000000000011110000000000000000000111100000000000000000000c000001"},
-		{"1000011000000111100000000000s00000001111000000000000000000000000dd1"},	// c = character
-		{"1000011000000111100000000000000000001111000000111000000000000000dd1"},
-		{"1000011000000111100000000000000000001111000000111000000000000000dd1"},
+		{"1000011000000111100000000000#00000001111000000000000000000000000001"},	// c = character
+		{"1000011000000111100000000000000000001111000000111000000000000000001"},
+		{"1000011000000111100000000000000000001111000000111000000000000000001"},
 		{"1000011000000000000000000000000000001111000000111000000111110000001"},
 		{"1000011000000000000000000111000000000000000000111000000111110000001"},
 		{"1000011000000011100000000111000000000000000000111000000111110000001"},
@@ -514,7 +544,7 @@ void Game::Make_Map_Dungeon(int dungeonStage)
 		{"1000011000000000000000111011000000000000000000111000000000000000001"},
 		{"1dd0011000000000000001100011000000000000001000111000001111100000001"},
 		{"1dd0011000000000000110000011000000000000011000000000001111100000001"},
-		{"1dd0011000000000s01100000011000000000000110000000000000110000000001"},	// s = store
+		{"1dd0011000000000#01100000011000000000000110000000000000110000000001"},	// s = store
 		{"1000011000000000000000000011000000000001100000000000000000000000001"},
 		{"1000000000000000000000000011000000000001000000000000000000000000001"},
 		{"1000000000000000000000000011000000000000000000000000000000000000001"},
@@ -769,7 +799,6 @@ void Game::Character_Status(int dungeonStage)		// 캐릭터 상태창(캐릭터 정보창,  
 	gotoxy(80, 12); cout << "방어력 : " << MyCharacter.GetDef();
 	gotoxy(80, 13); cout << "경험치 : " << MyCharacter.GetCurrentExp() << "/" << MyCharacter.GetMaxExp();
 	gotoxy(78, 14); cout << "현재위치 : 던전 " << dungeonStage << "층";
-
 }
 void Game::Character_Inventory()
 {
@@ -791,6 +820,7 @@ void Game::Character_Inventory()
 }
 void Game::Remove_Character_Info_Window()	// 캐릭터 상태창 지우는 함수
 {
+	setcolor(WHITE, BLACK);
 	for (int row = 1; row < 28; row++)
 	{
 		gotoxy(71, row); cout << "                                                                  ";
@@ -801,8 +831,9 @@ void Game::Remove_Character_Info_Window()	// 캐릭터 상태창 지우는 함수
 //=====================================================
 // 중 - 게임진행 출력창 (상점, 몬스터 전투)
 //=====================================================
-inline void Game::Remove_GameProcess_Window()		// 상점화면, 배틀화면 지우기
+void Game::Remove_GameProcess_Window()		// 상점화면, 배틀화면 지우기
 {
+	setcolor(WHITE, BLACK);
 	for (int row = 29; row <= 67; row++)	// 게임진행창 전체 지우기
 	{
 		gotoxy(2, row); cout << "                                                                                                                                        ";
@@ -815,20 +846,23 @@ inline void Game::Remove_GameProcess_Window()		// 상점화면, 배틀화면 지우기
 }
 void Game::Remove_Inventory_In_Store()
 {
+	setcolor(WHITE, BLACK);
 	for (int row = 38; row <= 64; row++)
 	{
 		gotoxy(72, row); cout << "                                                                  ";
 	}
 }
-inline void Game::Remove_Inventory_In_Battle()
+void Game::Remove_Inventory_In_Battle()
 {
+	setcolor(WHITE, BLACK);
 	for (int row = 35; row <= 67; row++)
 	{
 		gotoxy(2, row); cout << "                                                     ";
 	}
 }
-inline void Game::Remove_BattleLog()
+void Game::Remove_BattleLog()
 {
+	setcolor(WHITE, BLACK);
 	for (int row = 29; row <= 67; row++)
 	{
 		gotoxy(72, row); cout << "                                                           ";
@@ -839,6 +873,7 @@ void Game::Remove_At_Battle_End()
 	char input = 0;
 	setcolor(BLACK, WHITE);
 	gotoxy(72, 67); cout << "아무키나 누르세요....";
+
 	setcolor(WHITE, BLACK);
 	input = _getch();
 	for (int row = 29; row <= 67; row++)	// 게임진행창 전체 지우기
@@ -850,106 +885,101 @@ void Game::Remove_At_Battle_End()
 // 상점 관련
 void Game::Store_Process(int dungeonStage,int& infoWindowType)
 {
-	Remove_GameProcess_Window();
-	Store_Screen(dungeonStage);
-	
-	char Set_Color = BLACK;
+	char setColor = BLACK;
 	unsigned char input= 0;
-	char storeMode = BUY_MODE;
+	char storeMode = BUY_STATE;
 
-	setcolor(BLUE, LIGHTGREEN);
-	gotoxy(60, 35);  cout << "======BUY  MODE======";
-	setcolor(WHITE, BLACK);
+	Remove_GameProcess_Window();
+	Store_Screen(dungeonStage, BUY_STATE);
 
-	FLAG_using_store = true;
-	while (FLAG_using_store)
+	bool usingStore = true;
+	while (usingStore)
 	{
 		if (FLAG_infoWindowUpdate)		// 캐릭 정보창 업데이트
 		{
 			FLAG_infoWindowUpdate = false;
-			Character_Info_Window(infoWindowType, dungeonStage);	// 정보창 업뎃
-			MyCharacter.inventory.ShowInventory_In_Store();	// 상점내 인벤토리 업뎃
+			Character_Info_Window(infoWindowType, dungeonStage);// 정보창 업뎃
+			MyCharacter.inventory.ShowInventory_In_Store();		// 상점내 인벤토리 업뎃
 		}
 
-		switch (input = _getch())
+		input = _getch();
+		if ('1' <= input && input <= '9')			// 아이템 사용
 		{
-		case '1':
-		case '2':
-		case '3':
-		case '4':
-		case '5':
-		case '6':
-		case '7':
-		case '8':
-		case '9':
-			if (storeMode == BUY_MODE)
-				Store_BuyMode(dungeonStage, input);
-			else if (storeMode == SELL_MODE)
-				Store_SellMode(input);
-			break;
-
-		case 'u':
-		case 'U':
-		case 'i':
-		case 'I':
-			infoWindowType = input;
-			Character_Info_Window(infoWindowType, dungeonStage);	// U, I 눌렀을때 바꾸도록
-			break;
-
-		case 'r':
-		case 'R':
-			if (storeMode == BUY_MODE)
-			{
-				setcolor(RED, LIGHTGREEN);   
-				gotoxy(60, 35);  cout << "======SELL MODE======";
-				setcolor(WHITE, BLACK);
-				storeMode = SELL_MODE;
-			}
-			else
-			{
-				setcolor(BLUE, LIGHTGREEN);
-				gotoxy(60, 35);  cout << "======BUY  MODE======";
-				setcolor(WHITE, BLACK);
-				storeMode = BUY_MODE;
-			}
-			break;
-
-		case 'w':
-		case 'W':
-		case 'a':
-		case 'A':
-		case 's':
-		case 'S':
-		case 'd':
-		case 'D':
-		case 'p':
-		case 'P':
-			FLAG_using_store = false;
-			Remove_GameProcess_Window();
-			break;
-
-		case SPACE_BAR : // 테스트용
-			MyCharacter.SetGold(500000);
-			break;
-
-		default:
-			Set_Color %= MAX_CONSOLE_COLOR_NUM;
-			setcolor(BLACK, Set_Color);	// 출력 위치지정, 색지정
-			gotoxy(48, 65); cout << "현재 상점 이용중입니다. 나간 후에 시도해주세요";
-			setcolor(WHITE, BLACK);
-			Set_Color++;	
+			if (storeMode == BUY_STATE)
+				Store_BuyState(dungeonStage, input);
+			else if (storeMode == SELL_STATE)
+				Store_SellState(input);
 		}
-		FLAG_infoWindowUpdate = true; // 상점에서 어떤 상호작용을 하던지 정보창이 업뎃되도록,
+		else 
+		{
+			switch (input)
+			{
+			case 'u':
+			case 'U':
+			case 'i':
+			case 'I':								// U, I 대소문자 입력
+				infoWindowType = input;
+				Character_Info_Window(infoWindowType, dungeonStage);	
+				break;
+
+			case 'r':
+			case 'R':								// R 대소문자 입력
+				if (storeMode == BUY_STATE)
+				{
+					storeMode = SELL_STATE;
+					Store_Screen(dungeonStage, storeMode);
+				}
+				else
+				{
+					storeMode = BUY_STATE;
+					Store_Screen(dungeonStage, storeMode);
+				}
+				break;
+
+			case 'w':										
+			case 'W':
+			case 'a':
+			case 'A':
+			case 's':
+			case 'S':
+			case 'd':
+			case 'D':
+			case 'p':
+			case 'P':								// WASD, P 대소문자 입력
+				usingStore = false;
+				Remove_GameProcess_Window();
+				break;
+			case SPACE_BAR : 
+				MyCharacter.SetGold(500000);
+				break;
+
+			default:
+				setColor %= MAX_CONSOLE_COLOR_NUM;
+				setcolor(BLACK, setColor++);	// 출력 위치지정, 색지정
+				gotoxy(48, 65); cout << "현재 상점 이용중입니다. 나간 후에 시도해주세요";
+			}
+		}
+		FLAG_infoWindowUpdate = true;	// 상점에서 어떤 상호작용을 하던지 정보창이 업뎃되도록
 	}
-	// gotoxy(2,67); cout << "■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■■";
 }
-void Game::Store_Screen(int dungeonStage)
+void Game::Store_Screen(int dungeonStage, char state)
 {
-	//gotoxy(2,29); cout << "
+	if (state == BUY_STATE)
+	{
+		setcolor(BLUE, LIGHTGREEN);
+		gotoxy(60, 35);  cout << "======BUY  STATE======";
+	}
+	else
+	{
+		setcolor(RED, LIGHTGREEN);
+		gotoxy(60, 35);  cout << "======SELL STATE======";
+	}
+	//gotoxy(60, 35);  cout << "======BUY  MODE======";
+
+	setcolor(WHITE, BLACK);
 	gotoxy(48, 31);  cout << "=============================================";
 	gotoxy(47, 32);  cout << "｜               던전 " << dungeonStage << "층 상점              ｜";
 	gotoxy(48, 33);  cout << "=============================================";
-
 
 	gotoxy(115, 30); cout << "   [P]- 상점 나가기";
 	gotoxy(113, 31); cout << "[방향키]- 상점 나가기";
@@ -1001,7 +1031,7 @@ void Game::Store_Screen(int dungeonStage)
 		break;
 	}
 }
-void Game::Store_BuyMode(int dungeonStage,int input)	// 상점에서 구매모드일때
+void Game::Store_BuyState(int dungeonStage,int input)	// 상점에서 구매모드일때
 {
 	switch (dungeonStage)
 	{
@@ -1084,7 +1114,7 @@ void Game::Store_BuyMode(int dungeonStage,int input)	// 상점에서 구매모드일때
 		break;
 	}
 }
-void Game::Store_SellMode(int input)	// 상점에서 판매모드일때
+void Game::Store_SellState(int input)	// 상점에서 판매모드일때
 {
 	int index = input - 48 - 1;	// 아스키 -48, 인덱스 -1
 	//setcolor(BLACK, WHITE);	// 상점 디버그용 // 테스트
@@ -1097,9 +1127,10 @@ void Game::Store_SellMode(int input)	// 상점에서 판매모드일때
 // 몬스터 전투관련
 void Game::Battle_Process(int dungeonStage, int &infoWindowType)
 {
-	Monster monster("noname", 0, 0, 0, 0, 0);
+	//Monster monster("noname", 0, 0, 0, 0, 0);
+	Monster monster;
 
-	Monster_Decision(dungeonStage ,monster);		// 만날 몬스터 결정
+	Monster_Decision(dungeonStage, monster);		// 만날 몬스터 결정
 	Battle_Screen(&monster);
 
 	unsigned int input = 0;

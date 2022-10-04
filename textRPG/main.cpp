@@ -10,19 +10,7 @@ int main()
 	Init_Console();
 	srand((int)time(NULL));	// 난수생성을 위한 시드값 제공
 
-	int game_state = INTIAL_GAME_STATE;
-	while (1)
-	{
-		switch (game_state)
-		{
-		case INTIAL_GAME_STATE:
-			game_state = Game::Initial_Game_State();	// 게임 전 프로세스
-			break;
-
-		case GAME_EXIT:			// 게임종료
-			return 0;
-		}
-	}
+	Game::Initial_Game_State();	
 }
 
 int Percent(int percent)		// 확률 계산용 함수
@@ -55,7 +43,7 @@ int Avoid_Garbage_getch()			// 한글 및 엔터값 getch 처리
 
 void Init_Console()
 {
-	system("mode con cols=70 lines=30 | title TXT_RPG");
+	system("mode con cols=70 lines=30 | title 영웅키우기");
 	removeCursor();
 }
 

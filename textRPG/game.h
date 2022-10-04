@@ -32,7 +32,6 @@ public:
 	static void Init_Game_Frame();
 	
 	// 게임 중
-	static int Playing_Game_State();
 	static int Playing_Game_Process();
 	static void Playing_Game_Frame();
 
@@ -55,9 +54,9 @@ public:
 
 	// 상점 관련
 	static void Store_Process(int dungeonStage, int& infoWindowType);
-	static void Store_Screen(int dungeonStage);
-	static void Store_BuyMode(int dungeonStage,int input);
-	static void Store_SellMode(int input);
+	static void Store_Screen(int dungeonStage, char state);
+	static void Store_BuyState(int dungeonStage, int input);
+	static void Store_SellState(int input);
 
 	// 몬스터 전투관련
 	static void Battle_Process(int dungeonStage, int& infoWindowType);
@@ -70,3 +69,6 @@ public:
 	static bool Battle_UseItem();
 	static void Control_BattleLog();
 };
+
+
+//static int Playing_Game_State();
