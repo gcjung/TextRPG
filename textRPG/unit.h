@@ -11,7 +11,7 @@ public:
 		int x;
 		int y;
 		Position();
-		void Move(int x, int y, int* stage, int* infoWindowType);
+		void Move(int x, int y, int& stage, int& infoWindowType);
 	};
 	Position pos;
 
@@ -40,7 +40,7 @@ public:
 
 	virtual void Dead() abstract;
 
-private:
+protected:
 	string name;
 	int level;
 	int maxHP;
@@ -70,10 +70,9 @@ public:
 	void SetCurrentExp(int currentExp);
 	void SetMaxMP(int maxMp);
 	void SetCurrentMP(int currentMp);
-	void SetResurrection();
 
 	void Attack(Monster* monster);
-	void Dead();			// ƒ≥∏Ø≈Õ ªÁ∏¡Ω√ Ω∫≈»√ ±‚»≠, µ∑ »Í∏Æ±‚ µÓµÓ
+	void Dead() override;	// ƒ≥∏Ø≈Õ ªÁ∏¡Ω√ Ω∫≈»√ ±‚»≠, µ∑ »Í∏Æ±‚ µÓµÓ
 
 private:
 	int characterClass;
@@ -83,6 +82,7 @@ private:
 	int currentMP;
 };
 
+//void SetResurrection();
 class Monster final : public Unit
 {
 private:
@@ -93,11 +93,14 @@ public:
 
 	void SetMonster(string name, int level, int maxhp, int att, int exp, int gold);
 	void ShowMonsterInfo() const;
+	void ShowMonster() const;
+	void ShowSlime() const;
+	void ShowNeki() const;
 
 	int GetExp() const;
 	void SetExp(int exp);
 
 	void Attack(Character* character, int dungeonStage);
-	void Dead();
+	void Dead() override;
 };
 

@@ -24,20 +24,18 @@ class Item;
 #include "inventory.h"
 #include "unit.h"
 
-#define BUY_MODE	0
-#define SELL_MODE	1
+#define BUY_STATE	0
+#define SELL_STATE	1
 
 #define QUESTION_MARK	63		// 물음표 아스키값
 #define CARRIAGE_RETURN 13		// Enter  아스키값  
 #define MAX_ASCII_NUM	127		// 아스키 최대값
-#define VIRTUAL_RETURN	99		// 부모 virtual return값 // 이건 쓸모없음.. 뒤늦게 깨달음
 
 #define SUCCESS 1
 #define FAIL	0
 #define MIN_BATTLE_LOG_ROW  27
 
 
-void Show_Slime();
 void Init_Console();
 int Avoid_Garbage_getch();
 int Percent(int percent);

@@ -11,7 +11,7 @@ private:
 	vector<Item*> slots;
 public:
 	Inventory();
-	void BuyItem(Item* Item, Unit* unit);
+	void BuyItem(Item* Item);
 	bool UseItem(int index);
 	void Sell_Items(int index);
 
@@ -20,3 +20,7 @@ public:
 	void ShowInventory_In_Battle();
 	void Test();
 };
+
+
+
+

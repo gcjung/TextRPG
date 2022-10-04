@@ -3,13 +3,13 @@
 
 
 
-extern char tempMap[27][68];
+extern char TempMap[27][68];
 extern bool FLAG_mapUpdate;
 extern bool FLAG_infoWindowUpdate;
 extern bool FLAG_Monster_Observation;
 extern bool FLAG_playing_battle;
 extern int Battle_log_row;
-extern Character My_Character;
+extern Character MyCharacter;
 
 //=======================================================
 // Unit Class 함수 정의
@@ -29,43 +29,41 @@ Unit::Position::Position() : x(1), y(1)
 
 }
 
-void Unit::Position::Move(int inputX,int inputY,int * dungeonStage,int *infoWindowType)	// 이동 및 오브젝트 상호작용
+void Unit::Position::Move(int inputX,int inputY,int &dungeonStage,int &infoWindowType)	// 이동 및 오브젝트 상호작용
 {
-	char mapObject = tempMap[this->y + inputY - 1][this->x + inputX - 2]; // 미리 이동할 곳의 오브젝트
-	Game game;
+	char mapObject = TempMap[this->y + inputY - 1][this->x + inputX - 2]; // 미리 이동할 곳의 오브젝트
+
 	if (mapObject == '0')		// 빈 칸
 	{
 		setcolor(WHITE, BLACK);
-		gotoxy(this->x, this->y);
+		gotoxy(this->x, this->y);		// 움직이기 전 공백으로 만들어줌
 		cout << " ";
 
 		setcolor(YELLOW, BLACK);
 		gotoxy(this->x + inputX, this->y + inputY);
-		cout << "@";
-		setcolor(WHITE, BLACK);
+		cout << "@";					// 움직인 후 캐릭터표시 해줌
 
 		this->x += inputX;
 		this->y += inputY;
 	}
-	else if (mapObject == 's')	// 상점
+	else if (mapObject == '#')	// 상점
 	{
-		game.Store_Process(*dungeonStage, infoWindowType);
+		Game::Store_Process(dungeonStage, infoWindowType);
 	}
 	else if (mapObject == 'm')	// 몬스터
 	{
-		game.Battle_Process(*dungeonStage, infoWindowType);
-		tempMap[this->y + inputY - 1][this->x + inputX - 2] = '0';	// 몬스터 전투 후 빈곳으로 만들어주기
+		Game::Battle_Process(dungeonStage, infoWindowType);
+		TempMap[this->y + inputY - 1][this->x + inputX - 2] = '0';	// 몬스터 전투 후 빈곳으로 만들어주기
 	}
 	else if (mapObject == 'd')	// 목적지
 	{
-		// (* dungeonStage)++; << 나중사용할예정
-		*dungeonStage = (*dungeonStage % 3) + 1;	// 테스트, 
-		FLAG_mapUpdate = true;			// 다음 던전입장시, 맵업데이트
+		dungeonStage = (dungeonStage % 3) + 1;	// 3스테이지까지 존재 
+		FLAG_mapUpdate = true;			// 다음 던전입장시, 맵 업데이트
 		FLAG_infoWindowUpdate = true;	// 다음 던전입장시, 정보창에 던전정보를 업뎃하기위함
 	}
 
 }
-
+// (* dungeonStage)++; << 나중사용할예정
 // Getter 함수
 inline string Unit::GetName() const
 {
@@ -90,7 +88,6 @@ inline int Unit::GetAtt() const
  int Unit::GetDef() const
 {
 	return this->def;
-
 }
 inline int Unit::GetGold() const
 {
@@ -144,8 +141,8 @@ Character::Character() : characterClass(0), maxExp(100), currentExp(0), maxMP(10
 {
 
 }
-Character::Character(int Character_Class, int MaxExp, int CurrentExp, int MaxMp, int CurrentMP)
-	: characterClass(Character_Class), maxExp(MaxExp), currentExp(CurrentExp), maxMP(MaxMp), currentMP(CurrentMP)
+Character::Character(int characterClass, int maxExp, int currentExp, int maxMp, int currentMP)
+	: characterClass(characterClass), maxExp(maxExp), currentExp(currentExp), maxMP(maxMp), currentMP(currentMP)
 {
 
 }
@@ -193,13 +190,13 @@ void Character::SetCurrentMP(int current_mp)
 {
 	this->currentMP = current_mp;
 }
-void Character::SetResurrection()
-{
-	this->currentMP = maxMP; 
-	this->SetCurrentHP(this->GetMaxHP());
-	this->currentExp = (this->currentExp) - (this->currentExp/10);
-	this->SetGold(this->GetGold() - (this->GetGold()/10));
-}
+//void Character::SetResurrection()
+//{
+//	this->currentMP = maxMP; 
+//	this->SetCurrentHP(this->GetMaxHP());
+//	this->currentExp = (this->currentExp) - (this->currentExp/10);
+//	this->SetGold(this->GetGold() - (this->GetGold()/10));
+//}
 
 
 void Character::Attack(Monster* monster)
@@ -216,7 +213,7 @@ void Character::Attack(Monster* monster)
 
 		//setcolor(GREEN, BLACK);	cout << My_Character.GetName();
 		gotoxy(72, Battle_log_row += 2); cout << "▣ ";
-		setcolor(GREEN, BLACK);	cout << My_Character.GetName();
+		setcolor(GREEN, BLACK);	cout << MyCharacter.GetName();
 		setcolor(WHITE, BLACK);	cout << " 공격-> ";
 		setcolor(RED, BLACK);	cout << monster->GetName();
 		setcolor(WHITE, BLACK);	cout << "을 처치했습니다.";
@@ -231,7 +228,7 @@ void Character::Attack(Monster* monster)
 		monster->SetCurrentHP(monster->GetCurrentHP() - damage);
 		
 		gotoxy(72, Battle_log_row += 2); cout << "▣ ";
-		setcolor(GREEN, BLACK);	cout << My_Character.GetName();
+		setcolor(GREEN, BLACK);	cout << MyCharacter.GetName();
 		setcolor(WHITE, BLACK);	cout << " 공격-> ";
 		setcolor(RED, BLACK);	cout << monster->GetName();
 		setcolor(WHITE, BLACK); cout << "은(는) ";
@@ -239,8 +236,12 @@ void Character::Attack(Monster* monster)
 		setcolor(WHITE, BLACK);	cout << "의 피해를 입었다.";
 	}
 }
-void Character::Dead()			
+void Character::Dead() 
 {
+	this->currentMP = maxMP;
+	this->SetCurrentHP(this->GetMaxHP());
+	this->currentExp = (this->currentExp) - (this->currentExp / 10);
+	this->SetGold(this->GetGold() - (this->GetGold() / 10));
 	//FLAG_playing_battle = false;
 	//Game::Remove_At_Battle_End();	// 누르면 화면지우고 진행
 	//Game::Map_Window(dungeonStage);	// ※순서주의※ 죽었으니 맵을 업뎃함
@@ -268,7 +269,7 @@ void Monster::SetMonster(string name, int level, int maxhp, int att, int exp, in
 void Monster::ShowMonsterInfo() const
 {
 	int row = 30;
-	Show_Slime();
+	ShowMonster();
 	
 	//gotoxy(30, row++); cout << "====================" << "          ";
 	gotoxy(30, row++); cout << "[LV." << GetLV() << "]  ";
@@ -283,6 +284,96 @@ void Monster::ShowMonsterInfo() const
 	}
 	//gotoxy(30, row++); cout << "====================";
 }
+void Monster::ShowMonster() const
+{
+	string tempStr;
+	
+	if (name.find(" ") == string::npos)
+		tempStr = name;
+	else
+		tempStr = name.substr(name.find(" ")+1);
+	//gotoxy(50, 30); cout << "캐릭정보수정 : " << tempStr;
+	if (tempStr == "슬라임")
+		ShowSlime();
+	else if (tempStr == "네키")
+		ShowNeki();
+	else
+		ShowSlime();
+}
+void Monster::ShowSlime() const
+{
+	int row = 35;
+	//gotoxy(16, row++);
+	gotoxy(7, row++); cout << "                         . = @@!.     ";
+	gotoxy(7, row++); cout << "                       ~=#=**=$#-     ";
+	gotoxy(7, row++); cout << "     ;;-              ~:#      :=-    ";
+	gotoxy(7, row++); cout << "    ;~, .             ~@        ~=,   ";
+	gotoxy(7, row++); cout << "   *:~,. :           $!.=        ;=   ";
+	gotoxy(7, row++); cout << "   ;::-,,~          :~~-.;        =-  ";
+	gotoxy(7, row++); cout << "    ;=:~!          ;,:~,.,,       =@  ";
+	gotoxy(7, row++); cout << "    .!!$.         ;-::-,. *       =#  ";
+	gotoxy(7, row++); cout << "    .!          .$,::~-,,. $.     ;$  ";
+	gotoxy(7, row++); cout << "     ;        ,=!-::~--,,.  !-    !#  ";
+	gotoxy(7, row++); cout << "     #~     ;*:,~::~--,,,.   ,!   $@  ";
+	gotoxy(7, row++); cout << "     ~#   $~-,~:::~--,,,..     ~: $@  ";
+	gotoxy(7, row++); cout << "      !#@~,--::::~---,,,.       ,@#   ";
+	gotoxy(7, row++); cout << "      ,*.--~::::~----,,..        ~#   ";
+	gotoxy(7, row++); cout << "     .*,-=!::::~~---,,,..         $   ";
+	gotoxy(7, row++); cout << "     $.-#;#@:::~---,,,,..         .*  ";
+	gotoxy(7, row++); cout << "     ;-~= $@::~~---,,@~@,.         #  ";
+	gotoxy(7, row++); cout << "    $.-:@-~:::~~---,#* $@..        *  ";
+	gotoxy(7, row++); cout << "    #,~:;@$;:::~--,,*-  !,.....       ";
+	gotoxy(7, row++); cout << "    #,~:;;;:;!*~~-,,~@ @#,, ......  ; ";
+	gotoxy(7, row++); cout << "    #,~:;;;::! =#-,,,~**,,,,,.  ..  * ";
+	gotoxy(7, row++); cout << "    #,~:;;;::!*##--,,,,,,,,,,.  ..  * ";
+	gotoxy(7, row++); cout << "    #.-:;;:::!*=#--,,,,,,,,,,.  ..  , ";
+	gotoxy(7, row++); cout << "    , -~:::::!;~$---,,,,,,,,,,..,. #  ";
+	gotoxy(7, row++); cout << "     =,-~~:::;..$----,,,,,,,,,,,,  #  ";
+	gotoxy(7, row++); cout << "     *-,,-~:::, $~---,,,,,,,,,,,. $   ";
+	gotoxy(7, row++); cout << "      $  ,-::::;~~-----,,,,,,-,. !;   ";
+	gotoxy(7, row++); cout << "      .$ .-::::;~~~~----------. #;    ";
+	gotoxy(7, row++); cout << "        $.,-~::::::~~~~~~~~~, .#      ";
+	gotoxy(7, row++); cout << "         ,$:.-~~::::::::~-, ~#!       ";
+	gotoxy(7, row++); cout << "           -***,.,,,,,,.*!#:-         ";
+	gotoxy(7, row++); cout << "              ..,$@@@@;...            ";
+}
+void Monster::ShowNeki() const
+{
+	int row = 35;
+
+	gotoxy(7, row++); cout << "            ,~~~~~~~-.                ";
+	gotoxy(7, row++); cout << "          ,-!=*=$*==*~-               ";
+	gotoxy(7, row++); cout << "         ,;*$*!**~****=-              ";
+	gotoxy(7, row++); cout << "        .;:-!**!. ~**!*=~             ";
+	gotoxy(7, row++); cout << "       ,*-.;*:*!  -*!;;!=:            ";
+	gotoxy(7, row++); cout << "      ,;-,;$**#*  .~!;;!=:            ";
+	gotoxy(7, row++); cout << "     ,;~ ;$#*=#$; .-!;;;**~           ";
+	gotoxy(7, row++); cout << "     -*, *##!*#@= .-!;;;!=;           ";
+	gotoxy(7, row++); cout << "     -*, *#=;*#@= .-!;:;!=;           ";
+	gotoxy(7, row++); cout << "    ,::. ~*!:*#=~ .-!;:;!=;           ";
+	gotoxy(7, row++); cout << "    -*;. ~!;:**~  ,:;::;!=;           ";
+	gotoxy(7, row++); cout << "    -==:~!;~:!:  ,:!:::;!=;           ";
+	gotoxy(7, row++); cout << "    ~*!==:~~:!;--:*;::;!*=;           ";
+	gotoxy(7, row++); cout << "    -!!;::::::!$$=;;;;;!*=:           ";
+	gotoxy(7, row++); cout << "     -!!!!!!!!!*=!!**!!!=;.           ";
+	gotoxy(7, row++); cout << "      -!!=$=======**!!!*=:            ";
+	gotoxy(7, row++); cout << "       ,-*$$===***!!;;!$:.            ";
+	gotoxy(7, row++); cout << "         ,-!$=**!!!;;;*$~             ";
+	gotoxy(7, row++); cout << "          .-;$==*;:;!=~.              ";
+	gotoxy(7, row++); cout << "            ;!--~~:;!$-               ";
+	gotoxy(7, row++); cout << "           ~;:,.,-:!*:.~;;;~          ";
+	gotoxy(7, row++); cout << "          .;;,,.,-:!=--*==$*:~        ";
+	gotoxy(7, row++); cout << "           ::...,~;*=:**!!!*==:.      ";
+	gotoxy(7, row++); cout << "           ;;-,,~:;*==*!;;;!!=$,-~~~, ";
+	gotoxy(7, row++); cout << "           ;;,,,~:;!=*!!;;;!!*$:!===;,";
+	gotoxy(7, row++); cout << "           ::,.,~~:!*!!;:;;!!!=*!***$:";
+	gotoxy(7, row++); cout << "           :;-.,~~:;!!;;;!!!;!!!;!*==~";
+	gotoxy(7, row++); cout << "            :!--~~~:;;;!!**!!;:;!**$~ ";
+	gotoxy(7, row++); cout << "            ::,.-~:;!*!*=!::;;!!**=~. ";
+	gotoxy(7, row++); cout << "            .~;~~:;!**=:,:;::;**=*:.  ";
+	gotoxy(7, row++); cout << "             .:****==:-. .:***==:-.   ";
+	gotoxy(7, row++); cout << "              .~~~~~~.    .~~~~-.     ";
+}
 
 int Monster::GetExp() const
 {
@@ -296,7 +387,7 @@ void Monster::SetExp(int exp)
 void Monster::Attack(Character* character,int dungeonStage)
 {
 	int totalAtt = this->GetAtt() + this->GetAddAtt();
-	int damage = 0;
+	int damage;
 	damage = (rand() % totalAtt) + (totalAtt / 2);	// ex) 총공격력 100일 때, 50~150의 랜덤데미지를 준다.
 													// ex) 총공격력 150일 때, 75~225의 랜덤데미지를 준다.
 
@@ -304,7 +395,7 @@ void Monster::Attack(Character* character,int dungeonStage)
 	{
 		character->SetCurrentHP(0);
 		
-		gotoxy(72, Battle_log_row += 2); cout << "▣ ";
+		gotoxy(72, Battle_log_row += 2); cout << "   ";
 		setcolor(RED, BLACK);	cout << this->GetName();
 		setcolor(WHITE, BLACK);	cout << " 공격-> ";
 		setcolor(GREEN, BLACK);	cout << character->GetName();
@@ -313,15 +404,15 @@ void Monster::Attack(Character* character,int dungeonStage)
 		setcolor(WHITE, BLACK);	cout << "의 피해를 입고 ";
 		setcolor(RED, BLACK); cout << "죽었습니다.";
 		setcolor(WHITE, BLACK);
-		Show_Slime();
+		//Show_snake();
 
-		FLAG_playing_battle = false;	
-		Game::Remove_At_Battle_End();	// 누르면 화면지우고 진행
-		Game::Map_Window(dungeonStage);	// ※순서주의※ 죽었으니 맵을 업뎃함
+		//FLAG_playing_battle = false;	
+		//Game::Remove_At_Battle_End();	// 누르면 화면지우고 진행
+		//Game::Make_Map_Dungeon(dungeonStage);	// ※순서주의※ 죽었으니 맵을 업뎃함
 	}
 	else
 	{
-		gotoxy(72, Battle_log_row += 2); cout << "▣ ";
+		gotoxy(72, Battle_log_row += 2); cout << "   ";
 		setcolor(RED, BLACK);	cout << this->GetName();
 		setcolor(WHITE, BLACK);	cout << " 공격-> ";
 		setcolor(GREEN, BLACK); cout << character->GetName();
@@ -336,18 +427,18 @@ void Monster::Attack(Character* character,int dungeonStage)
 }
 void Monster::Dead()
 {
-	My_Character.SetGold(this->GetGold() + My_Character.GetGold());			// 돈 획득
+	MyCharacter.SetGold(this->GetGold() + MyCharacter.GetGold());			// 돈 획득
 
-	if (My_Character.GetCurrentExp() + this->GetExp() >= My_Character.GetMaxExp()) // 레벨업해야됨
+	if (MyCharacter.GetCurrentExp() + this->GetExp() >= MyCharacter.GetMaxExp()) // 레벨업해야됨
 	{
-		My_Character.SetCurrentExp(0);					// 현재 경험치는 0
-		My_Character.SetLV(My_Character.GetLV() + 1);	// LV 업
-		My_Character.SetMaxExp(My_Character.GetMaxExp() + My_Character.GetMaxExp() / 25);	// 최대겸치 20%증가
-		My_Character.SetMaxHP(My_Character.GetMaxHP() + (My_Character.GetMaxHP() / 15));
-		My_Character.SetMaxMP(My_Character.GetMaxMP() + (My_Character.GetMaxMP() / 15));
+		MyCharacter.SetCurrentExp(0);					// 현재 경험치는 0
+		MyCharacter.SetLV(MyCharacter.GetLV() + 1);	// LV 업
+		MyCharacter.SetMaxExp(MyCharacter.GetMaxExp() + MyCharacter.GetMaxExp() / 25);	// 최대겸치 20%증가
+		MyCharacter.SetMaxHP(MyCharacter.GetMaxHP() + (MyCharacter.GetMaxHP() / 15));
+		MyCharacter.SetMaxMP(MyCharacter.GetMaxMP() + (MyCharacter.GetMaxMP() / 15));
 	}
 	else
 	{
-		My_Character.SetCurrentExp(My_Character.GetCurrentExp() + this->GetExp());
+		MyCharacter.SetCurrentExp(MyCharacter.GetCurrentExp() + this->GetExp());
 	}
 }

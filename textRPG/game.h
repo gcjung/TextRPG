@@ -22,7 +22,6 @@ constexpr int MAX_STAGE10_MONSTER_NUM = 100;
 class Game
 {
 public:
-	Game();
 	static string Class_ItoS(char chractor_class);
 	
 	// 게임 전
@@ -33,16 +32,11 @@ public:
 	static void Init_Game_Frame();
 	
 	// 게임 중
-	static int Playing_Game_State();
-	static int Playing_Game_Screen();
+	static int Playing_Game_Process();
 	static void Playing_Game_Frame();
 
 	// 맵 관련 함수
-	static void Map_Window(int dungeonStage);
 	static void Make_Map_Dungeon(int dungeonStage);
-	static void Make_Map_Dungeon1(int dungeonStage);
-	static void Make_Map_Dungeon2(int dungeonStage);
-	static void Make_Map_Dungeon3(int dungeonStage);
 	static void CreateMonster(char(&map)[27][68], int maxMonsterNum);
 	
 	// 캐릭터 정보창 관련 함수
@@ -59,19 +53,22 @@ public:
 	static void Remove_At_Battle_End();
 
 	// 상점 관련
-	static void Store_Process(int dungeonStage, int* infoWindowType);
-	static void Store_Screen(int dungeonStage);
-	static void Store_Buy_Mode(int dungeonStage,int input);
-	static void Store_Sell_Mode(int input);
+	static void Store_Process(int dungeonStage, int& infoWindowType);
+	static void Store_Screen(int dungeonStage, char state);
+	static void Store_BuyState(int dungeonStage, int input);
+	static void Store_SellState(int input);
 
 	// 몬스터 전투관련
-	static void Battle_Process(int dungeonStage, int* infoWindowType);
+	static void Battle_Process(int dungeonStage, int& infoWindowType);
 	static void Monster_Decision(int dungeonStage, Monster& monster);
 	static void Battle_Screen(Monster* monster);
 	static void Thread_InBattle(mutex& m);
 
 	static void Battle_ObservMonster();
 	static void Battle_RunAway();
-	static bool Battle_Use_Item();
+	static bool Battle_UseItem();
 	static void Control_BattleLog();
 };
+
+
+//static int Playing_Game_State();

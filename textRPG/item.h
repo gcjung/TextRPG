@@ -1,12 +1,13 @@
 #pragma once
 
-enum charactor_class{ NO_CLASS, WARRIOR, ARCHER, WIZARD};
+enum class ItemType {Equipment, Potion};
 
 class Item abstract
 {
-private:
+protected:
 	string name;
 	int price;
+	bool isWearing;
 
 public:
 	Item();
@@ -19,32 +20,29 @@ public:
 	string GetName() const;
 	int GetPrice() const;
 
-	// virtual
-	virtual int GetIsUse() abstract;
+	virtual int GetIsUse();
 	virtual int GetCount() abstract;
 	
-	virtual void SetIsUse(const int isuse) abstract;
+	virtual void SetIsUse(const int isuse);
 	virtual void SetCount(const int count) abstract;
 	
 	virtual void UseItem() abstract;
 	virtual void ShowInfo() abstract;
-	virtual int IsEquipment() abstract;
+	virtual int GetItemType() abstract;
 };
 
 class Equipment final : public Item
 {
 private:
-	int HP;
-	int MP;
-	int Att;
-	int Def;
-	bool IsUse;
-	int Count;
+	int hp;
+	int mp;
+	int att;
+	int count;
 
 public:
 	Equipment();
 	Equipment(string Name, int Price, int Att); // 무기용
-	Equipment(string Name, int Price, int Hp, int Mp, int Def); // 방어구용
+
 	virtual ~Equipment() override;
 
 	// virtual
@@ -56,28 +54,24 @@ public:
 
 	void UseItem() override;
 	void ShowInfo() override;
-	int IsEquipment() override;
+	int GetItemType() override;
 };
 
 class Potion final : public Item
 {
 private:
-	int Count;
-	int HP;
-	int MP;
+	int count;
+	int hp;
+	int mp;
 public:
 	Potion();
 	Potion(string Name, int Hp, int Mp, int Price, int Count);
 	virtual ~Potion() override;
 
-	// virtual
 	int GetCount() override;
-	int GetIsUse() override;
-
 	void SetCount(const int count) override;
-	void SetIsUse(const int isuse) override;
 
 	void UseItem() override;
 	void ShowInfo() override;
-	int IsEquipment() override;
+	int GetItemType() override;
 };
